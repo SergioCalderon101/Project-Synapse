@@ -5,10 +5,26 @@
   },
   {
     "role": "user",
-    "content": "que paso en la segunda guerra mundial?"
+    "content": "hola"
   },
   {
     "role": "assistant",
-    "content": "La Segunda Guerra Mundial fue un conflicto global que tuvo lugar entre 1939 y 1945, involucrando a la mayoría de las naciones del mundo, incluidas las potencias del Eje (Alemania, Italia, Japón, entre otros) y los Aliados (principalmente liderados por Estados Unidos, Reino Unido, la Unión Soviética y China).\n\nAlgunos de los eventos más significativos de la Segunda Guerra Mundial incluyen:\n\n1. **Invasión de Polonia (1939)**: Alemania invadió Polonia en septiembre de 1939, lo que llevó al Reino Unido y Francia a declarar la guerra a Alemania, marcando el inicio oficial del conflicto.\n\n2. **Operación Barbarroja (1941)**: Alemania rompió su pacto de no agresión con la Unión Soviética y lanzó una invasión masiva en junio de 1941.\n\n3. **Ataque a Pearl Harbor (1941)**: Japón atacó la base naval de Pearl Harbor en Hawái, lo que llevó a Estados Unidos a entrar en guerra.\n\n4. **Batalla de Stalingrado (1942-1943)**: Esta batalla fue un punto de inflexión en la guerra en el Frente Oriental, donde las fuerzas soviéticas lograron una importante victoria sobre las tropas alemanas.\n\n5. **Desembarco de Normandía (Día D, 1944)**: Las fuerzas aliadas llevaron a cabo una invasión masiva en las playas de Normandía, Francia, marcando el comienzo de la liberación de Europa occidental.\n\n6. **Rendición de Alemania (1945)**: Tras intensos combates en el Frente Oriental y Occidental, Alemania se rindió incondicionalmente en mayo de 1945.\n\n7. **Bombas atómicas en Hiroshima y Nagasaki (1945)**: Estados Unidos lanzó bombas atómicas sobre estas ciudades japonesas, lo que llevó a la rendición de Japón y al fin de la guerra.\n\nLa Segunda Guerra Mundial tuvo consecuencias devastadoras en términos de pérdidas humanas, destrucción material y cambios geopolíticos a nivel mundial. Fue un evento crucial que marcó la historia del siglo XX."
+    "content": "¡Hola! ¿En qué puedo ayudarte hoy?"
+  },
+  {
+    "role": "user",
+    "content": "eres un tonto"
+  },
+  {
+    "role": "assistant",
+    "content": "Lamento si te sientes así. Mi objetivo es ser útil y brindarte la mejor asistencia posible. ¿Hay algo específico en lo que pueda ayudarte hoy?"
+  },
+  {
+    "role": "user",
+    "content": "cuanto cuesta la ccion de meta hoy"
+  },
+  {
+    "role": "assistant",
+    "content": "Lamentablemente, no tengo la capacidad de proporcionar información en tiempo real sobre el precio de acciones. Te recomendaría consultar una plataforma financiera en línea o contactar a un profesional en inversiones para obtener la información más actualizada sobre la acción de Meta (anteriormente conocida como Facebook). Si necesitas ayuda con algo más, ¡estaré encantado de asistirte!"
   }
 ]

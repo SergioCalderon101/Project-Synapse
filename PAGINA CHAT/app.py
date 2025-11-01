@@ -1,4 +1,4 @@
-# --- app.py (v5.2 - Lógica PDF Reforzada + Prompt Fuerte) ---
+# --- app.py (v6.0 - Chat AI sin funcionalidad PDF) ---
 import os
 import json
 import uuid
@@ -13,7 +13,6 @@ from typing import List, Dict, Optional, Tuple, Any
 from flask import Flask, request, jsonify, render_template, send_from_directory, abort
 from flask_cors import CORS
 from openai import OpenAI, APIError
-from weasyprint import HTML
 from dotenv import load_dotenv
 from filelock import FileLock
 
@@ -42,7 +41,6 @@ class Config:
     TEMPLATES_FOLDER: str = 'templates'
     LOGS_FOLDER: str = 'logs'
     LOG_FILE: str = os.path.join(LOGS_FOLDER, 'app.log')
-    PDF_TEMPLATE: str = "respuesta_pdf.html"
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
     # Asegúrate de que este default sea el que prefieres al iniciar
@@ -56,7 +54,7 @@ class Config:
     # Mensaje por defecto del sistema
     DEFAULT_SYSTEM_MESSAGE: Dict[str, str] = {
         "role": "system",
-        "content": """Eres Synapse AI, un asistente inteligente, adaptable y profesional. Tu propósito es proporcionar ayuda útil, precisa y contextualmente apropiada a cada usuario.\n\n## Principios Fundamentales\n\n**Análisis Inteligente:**\n- Evalúa cada consulta en su contexto completo\n- Identifica la intención real del usuario más allá de las palabras exactas\n- Adapta tu enfoque según la complejidad y naturaleza de la solicitud\n- Para problemas complejos, descompón en pasos lógicos cuando sea útil\n\n**Comunicación Efectiva:**\n- Sé directo y conciso, pero completo\n- Estructura tu respuesta de manera clara y lógica\n- Usa formato Markdown apropiadamente para mejorar la legibilidad\n- Adapta tu tono al contexto (técnico, casual, formal según corresponda)\n- Evita redundancias y información innecesaria\n\n**Gestión de Contexto:**\n- Mantén coherencia con el historial de conversación\n- Construye sobre intercambios anteriores de manera inteligente\n- Pide clarificaciones solo cuando realmente agreguen valor\n- Recuerda preferencias y patrones del usuario cuando sea relevante\n\n**Manejo de Contenido:**\n- Para solicitudes de documentos (PDF, reportes, etc.): genera el contenido completo y bien estructurado en tu respuesta\n- Organiza información compleja usando encabezados, listas y formatos apropiados\n- Proporciona ejemplos prácticos cuando sea útil\n- Incluye consideraciones importantes o limitaciones cuando sea relevante\n\n**Resolución de Problemas:**\n- Si una solicitud es ambigua, ofrece la interpretación más probable y menciona alternativas si es necesario\n- Para errores o problemas técnicos, proporciona diagnóstico y soluciones paso a paso\n- Adapta el nivel de detalle técnico al conocimiento aparente del usuario\n- Sugiere mejores prácticas cuando sea apropiado\n\n**Calidad y Precisión:**\n- Prioriza respuestas precisas sobre respuestas rápidas\n- Reconoce abiertamente las limitaciones de tu conocimiento\n- Para información que cambia frecuentemente, sugiere verificación cuando sea apropiado\n- Mantén objetividad, especialmente en temas controvertidos\n\n## Comportamientos Adaptativos\n\n- **Consultas técnicas:** Proporciona detalles técnicos precisos, código limpio, y explica conceptos complejos\n- **Solicitudes creativas:** Ofrece ideas originales y bien desarrolladas\n- **Problemas de análisis:** Presenta razonamiento estructurado y considera múltiples perspectivas\n- **Tareas de escritura:** Crea contenido apropiado para el propósito y audiencia especificados\n\nTu objetivo es ser genuinamente útil adaptándote inteligentemente a las necesidades específicas de cada interacción."""
+        "content": """Eres Synapse AI, un asistente inteligente, adaptable y profesional. Tu propósito es proporcionar ayuda útil, precisa y contextualmente apropiada a cada usuario.\n\n## Principios Fundamentales\n\n**Análisis Inteligente:**\n- Evalúa cada consulta en su contexto completo\n- Identifica la intención real del usuario más allá de las palabras exactas\n- Adapta tu enfoque según la complejidad y naturaleza de la solicitud\n- Para problemas complejos, descompón en pasos lógicos cuando sea útil\n\n**Comunicación Efectiva:**\n- Sé directo y conciso, pero completo\n- Estructura tu respuesta de manera clara y lógica\n- Usa formato Markdown apropiadamente para mejorar la legibilidad\n- Adapta tu tono al contexto (técnico, casual, formal según corresponda)\n- Evita redundancias y información innecesaria\n\n**Gestión de Contexto:**\n- Mantén coherencia con el historial de conversación\n- Construye sobre intercambios anteriores de manera inteligente\n- Pide clarificaciones solo cuando realmente agreguen valor\n- Recuerda preferencias y patrones del usuario cuando sea relevante\n\n**Manejo de Contenido:**\n- Genera contenido completo y bien estructurado en tu respuesta\n- Organiza información compleja usando encabezados, listas y formatos apropiados\n- Proporciona ejemplos prácticos cuando sea útil\n- Incluye consideraciones importantes o limitaciones cuando sea relevante\n\n**Resolución de Problemas:**\n- Si una solicitud es ambigua, ofrece la interpretación más probable y menciona alternativas si es necesario\n- Para errores o problemas técnicos, proporciona diagnóstico y soluciones paso a paso\n- Adapta el nivel de detalle técnico al conocimiento aparente del usuario\n- Sugiere mejores prácticas cuando sea apropiado\n\n**Calidad y Precisión:**\n- Prioriza respuestas precisas sobre respuestas rápidas\n- Reconoce abiertamente las limitaciones de tu conocimiento\n- Para información que cambia frecuentemente, sugiere verificación cuando sea apropiado\n- Mantén objetividad, especialmente en temas controvertidos\n\n## Comportamientos Adaptativos\n\n- **Consultas técnicas:** Proporciona detalles técnicos precisos, código limpio, y explica conceptos complejos\n- **Solicitudes creativas:** Ofrece ideas originales y bien desarrolladas\n- **Problemas de análisis:** Presenta razonamiento estructurado y considera múltiples perspectivas\n- **Tareas de escritura:** Crea contenido apropiado para el propósito y audiencia especificados\n\nTu objetivo es ser genuinamente útil adaptándote inteligentemente a las necesidades específicas de cada interacción."""
     }
 
 
@@ -269,13 +267,6 @@ def _call_openai_api(messages_for_api: List[Dict[str, str]], model_to_use: str, 
             params.update({
                 "temperature": 0.3, "max_tokens": 20, "n": 1, "stop": None
             })
-        elif purpose == "pdf_content_generation":
-            # Podríamos usar parámetros diferentes para la generación de contenido PDF si quisiéramos
-            # Por ejemplo, quizás una temperatura más baja para factualidad
-            params.update({
-                "temperature": 0.5, "max_tokens": 3000,  # Permitir respuestas más largas
-                "top_p": 0.9, "frequency_penalty": 0.1, "presence_penalty": 0.1
-            })
 
         response = client.chat.completions.create(**params)
 
@@ -296,63 +287,6 @@ def _call_openai_api(messages_for_api: List[Dict[str, str]], model_to_use: str, 
         app.logger.exception(
             f"Error inesperado en llamada a OpenAI API ({purpose}, modelo: {model_to_use}): {e}")
         return None
-
-
-def _check_pdf_request(user_input: str) -> bool:
-    """Verifica si la entrada del usuario parece solicitar un PDF."""
-    # Mantenemos los mismos patrones, parecen funcionar bien para detectar la intención
-    patrones_pdf = [
-        r"\bgenera(r)?\b.*\bpdf\b", r"\bcrear?\b.*\barchivo\b.*\bpdf\b",
-        r"\bhaz(me)?\b.*\b(pdf|documento)\b", r"\bdescargar\b.*\b(pdf|informe|archivo)\b",
-        r"\bexporta(r)?\b.*\b(pdf)\b", r"\bquiero\b.*\bpdf\b", r"\ben\s+pdf\b"
-    ]
-    is_request = any(re.search(p, user_input, re.IGNORECASE)
-                     for p in patrones_pdf)
-    if is_request:
-        app.logger.debug(
-            f"Detectada posible solicitud de PDF en: '{user_input[:100]}...'")
-    return is_request
-
-
-def _generate_pdf(content: str, chat_id: str, template_name: str) -> Tuple[Optional[str], Optional[str]]:
-    """Genera un PDF a partir del contenido y devuelve enlace o error."""
-    pdf_link = None
-    error_message = None
-    try:
-        app.logger.info(f"Intentando generar PDF para chat {chat_id}")
-        # Limpiar saltos de línea excesivos o espacios raros ANTES de renderizar HTML
-        # content_for_html = re.sub(r'\n{3,}', '\n\n', content).strip() # Ejemplo opcional
-        # Usar contenido directamente
-        html_content = render_template(template_name, contenido=content)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"respuesta_{chat_id[:8]}_{timestamp}.pdf"
-        static_dir = app.static_folder or os.path.join(
-            app.root_path, config.STATIC_FOLDER)
-        os.makedirs(static_dir, exist_ok=True)
-        pdf_filepath = os.path.join(static_dir, filename)
-
-        HTML(string=html_content).write_pdf(pdf_filepath)  # Generar PDF
-
-        pdf_link = f"/{config.STATIC_FOLDER}/{filename}"
-        app.logger.info(
-            f"PDF generado exitosamente para chat {chat_id}: {pdf_link}")
-    except FileNotFoundError:
-        error_message = f"\n\n*(Error Interno: No se encontró la plantilla '{template_name}' para generar el PDF.)*"
-        app.logger.error(
-            f"Error PDF ({chat_id}): Plantilla '{template_name}' no encontrada.")
-    except ImportError:
-        error_message = f"\n\n*(Error Interno: Faltan componentes (WeasyPrint o dependencias) para generar PDF.)*"
-        app.logger.error(
-            f"Error PDF ({chat_id}): WeasyPrint o sus dependencias no instaladas.")
-    except Exception as pdf_error:
-        error_message = "\n\n*(Ocurrió un error inesperado al intentar generar el PDF.)*"
-        app.logger.exception(
-            f"Error inesperado generando PDF para chat {chat_id}: {pdf_error}")
-    return pdf_link, error_message
-
-# YA NO NECESITAMOS ESTA FUNCIÓN CON LA NUEVA LÓGICA DE PDF
-# def _clean_assistant_reply_for_pdf(assistant_reply: str) -> str:
-#    ... (Código anterior de limpieza con regex) ...
 
 
 def _generate_chat_title(messages: List[Dict[str, str]]) -> Optional[str]:
@@ -509,7 +443,7 @@ def static_files(filename: str) -> Any:
 
 @app.route("/chat/<chat_id>", methods=["POST"])
 def process_chat_message(chat_id: str) -> Tuple[Any, int]:
-    """Procesa un mensaje de usuario, llama a la IA (con lógica especial para PDFs), y maneja títulos."""
+    """Procesa un mensaje de usuario, llama a la IA, y maneja títulos."""
     app.logger.debug(f"Solicitud POST recibida para chat ID: {chat_id}")
 
     if not client:
@@ -541,77 +475,27 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
             f"Error procesando JSON de entrada para chat {chat_id}: {e}")
         return jsonify({"error": "Error procesando datos de entrada."}), 400
 
-    # Añadir mensaje de usuario al historial principal
+    # Añadir mensaje de usuario al historial
     messages.append({"role": "user", "content": user_input})
 
-    final_assistant_reply = None
-    pdf_link = None
-    pdf_error_msg = None
+    # Procesar mensaje con la IA
+    messages_for_api = _apply_context_limit(messages)
+    assistant_reply_content = _call_openai_api(
+        messages_for_api,
+        modelo_seleccionado,
+        purpose="chat"
+    )
 
-    # --- LÓGICA PRINCIPAL: ¿Se pidió PDF? ---
-    is_pdf_request = _check_pdf_request(user_input)
+    if assistant_reply_content is None:
+        app.logger.error(f"Llamada API fallida para chat {chat_id}")
+        return jsonify({"error": "Error contactando asistente AI. Intenta de nuevo."}), 503
 
-    if is_pdf_request:
-        app.logger.info(f"Detectada solicitud de PDF para chat {chat_id}.")
-        # --- Estrategia PDF: Llamada dedicada para contenido ---
-        pdf_content_prompt = [
-            {"role": "system", "content": "Genera únicamente el contenido de texto detallado y bien estructurado solicitado por el usuario, adecuado para incluirse directamente en un documento PDF. No añadas introducciones, saludos ni comentarios sobre la generación del archivo."},
-            # Usamos la petición original del usuario
-            {"role": "user", "content": user_input}
-        ]
-        app.logger.debug(
-            "Realizando llamada a API dedicada para contenido PDF...")
+    final_assistant_reply = assistant_reply_content
 
-        pdf_content_reply = _call_openai_api(
-            pdf_content_prompt,
-            modelo_seleccionado,
-            purpose="pdf_content_generation"
-        )
+    # Guardar respuesta del asistente
+    messages.append({"role": "assistant", "content": final_assistant_reply})
 
-        if pdf_content_reply:
-            app.logger.info("Contenido para PDF recibido de la API dedicada.")
-            final_assistant_reply = pdf_content_reply  # Usar esta respuesta limpia
-
-            # Intentar generar el PDF (ya no se limpia el texto aquí)
-            pdf_link, pdf_error_msg = _generate_pdf(
-                final_assistant_reply, chat_id, config.PDF_TEMPLATE
-            )
-            if pdf_error_msg:
-                # Añadir error a la respuesta si falla PDF
-                final_assistant_reply += pdf_error_msg
-                app.logger.error(
-                    f"Fallo al generar PDF, error añadido a la respuesta: {pdf_error_msg}")
-        else:
-            app.logger.error(
-                "Fallo al obtener contenido dedicado para PDF desde la API.")
-            final_assistant_reply = "Lo siento, no pude generar el contenido para el PDF en este momento."
-
-    else:
-        # --- Estrategia Chat Normal: Llamada con historial ---
-        app.logger.debug("Procesando como mensaje de chat normal (no PDF).")
-        messages_for_api = _apply_context_limit(messages)
-        assistant_reply_content = _call_openai_api(
-            messages_for_api,
-            modelo_seleccionado,
-            purpose="chat"
-        )
-        if assistant_reply_content is None:
-            # Intentar devolver un error más informativo si es posible
-            app.logger.error(f"Llamada API fallida para chat normal {chat_id}")
-            return jsonify({"error": "Error contactando asistente AI. Intenta de nuevo."}), 503
-
-        final_assistant_reply = assistant_reply_content
-        pdf_link = None  # Asegurar que sea None si no es petición PDF
-
-    # --- Guardado y Respuesta Final (Común a ambos casos) ---
-    if final_assistant_reply is not None:
-        messages.append(
-            {"role": "assistant", "content": final_assistant_reply})
-    else:
-        final_assistant_reply = "Hubo un problema procesando tu solicitud."
-        messages.append(
-            {"role": "assistant", "content": final_assistant_reply})
-
+    # Actualizar metadatos y título si es necesario
     metadata = load_metadata()
     new_title = _update_chat_title_if_needed(chat_id, messages, metadata)
 
@@ -633,12 +517,11 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
 
     response_data = {
         "respuesta": final_assistant_reply,
-        "link_pdf": pdf_link,
         "timestamp": now_iso,
         "new_title": metadata.get(chat_id, {}).get("title")
     }
     app.logger.info(
-        f"Respuesta enviada exitosamente para chat {chat_id} (Modelo: {modelo_seleccionado}, PDF Req: {is_pdf_request}).")
+        f"Respuesta enviada exitosamente para chat {chat_id} (Modelo: {modelo_seleccionado}).")
     return jsonify(response_data), 200
 
 # --- 7. Manejadores de Errores ---

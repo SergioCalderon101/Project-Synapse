@@ -13,3 +13,24 @@
 2025-09-05 14:07:25,158 - app - INFO - Thread-12 (process_request_thread) - Nuevo chat creado con ID: 062da1a6-2d08-456f-aac6-6733df09fc62
 2025-09-05 14:07:33,281 - app - INFO - Thread-14 (process_request_thread) - Procesando mensaje para chat 062da1a6-2d08-456f-aac6-6733df09fc62 usando modelo: gpt-3.5-turbo
 2025-09-05 14:07:40,380 - app - INFO - Thread-14 (process_request_thread) - Respuesta enviada exitosamente para chat 062da1a6-2d08-456f-aac6-6733df09fc62 (Modelo: gpt-3.5-turbo, PDF Req: False).
+2025-11-01 14:52:55,532 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 14:52:55,536 - app - INFO - MainThread - 'templates' creado.
+2025-11-01 14:52:55,537 - app - INFO - MainThread - 'static' creado.
+2025-11-01 14:52:57,930 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 14:53:04,861 - app - WARNING - Thread-6 (process_request_thread) - Error 404: /favicon.ico - The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-01 14:53:09,646 - app - INFO - Thread-8 (process_request_thread) - DELETE /chat/062da1a6-2d08-456f-aac6-6733df09fc62
+2025-11-01 14:53:09,652 - app - INFO - Thread-8 (process_request_thread) - Metadata eliminada: 062da1a6-2d08-456f-aac6-6733df09fc62
+2025-11-01 14:53:09,653 - app - INFO - Thread-8 (process_request_thread) - Archivo eliminado: chats\062da1a6-2d08-456f-aac6-6733df09fc62.json
+2025-11-01 14:53:11,966 - app - INFO - Thread-10 (process_request_thread) - DELETE /chat/9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5
+2025-11-01 14:53:11,970 - app - INFO - Thread-10 (process_request_thread) - Metadata eliminada: 9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5
+2025-11-01 14:53:11,972 - app - INFO - Thread-10 (process_request_thread) - Archivo eliminado: chats\9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5.json
+2025-11-01 14:53:28,584 - app - INFO - Thread-12 (process_request_thread) - Nuevo chat creado con ID: dce34fc8-e491-499c-ab58-84c78c497c51
+2025-11-01 14:53:31,769 - app - INFO - Thread-14 (process_request_thread) - Procesando mensaje para chat dce34fc8-e491-499c-ab58-84c78c497c51 usando modelo: gpt-3.5-turbo
+2025-11-01 14:53:33,088 - app - INFO - Thread-14 (process_request_thread) - Respuesta enviada exitosamente para chat dce34fc8-e491-499c-ab58-84c78c497c51 (Modelo: gpt-3.5-turbo, PDF Req: False).
+2025-11-01 14:53:45,090 - app - INFO - Thread-16 (process_request_thread) - Procesando mensaje para chat dce34fc8-e491-499c-ab58-84c78c497c51 usando modelo: gpt-3.5-turbo
+2025-11-01 14:53:46,676 - app - INFO - Thread-16 (process_request_thread) - Intentando generar título para chat dce34fc8-e491-499c-ab58-84c78c497c51...
+2025-11-01 14:53:48,498 - app - INFO - Thread-16 (process_request_thread) - Título generado por IA validado: 'Interacción inicial amigable y desafiant'
+2025-11-01 14:53:48,499 - app - INFO - Thread-16 (process_request_thread) - Título generado. Actualizando metadata para dce34fc8-e491-499c-ab58-84c78c497c51: 'Interacción inicial amigable y desafiant'
+2025-11-01 14:53:48,503 - app - INFO - Thread-16 (process_request_thread) - Respuesta enviada exitosamente para chat dce34fc8-e491-499c-ab58-84c78c497c51 (Modelo: gpt-3.5-turbo, PDF Req: False).
+2025-11-01 14:54:11,615 - app - INFO - Thread-18 (process_request_thread) - Procesando mensaje para chat dce34fc8-e491-499c-ab58-84c78c497c51 usando modelo: gpt-3.5-turbo
+2025-11-01 14:54:13,709 - app - INFO - Thread-18 (process_request_thread) - Respuesta enviada exitosamente para chat dce34fc8-e491-499c-ab58-84c78c497c51 (Modelo: gpt-3.5-turbo, PDF Req: False).

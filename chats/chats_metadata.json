@@ -1,14 +1,8 @@
 {
-  "9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5": {
-    "id": "9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5",
-    "title": "Asistente Inteligente Synapse AI.",
-    "created_at": "2025-05-04T00:16:06.222247+00:00",
-    "last_updated": "2025-09-05T20:07:21.767429+00:00"
-  },
-  "062da1a6-2d08-456f-aac6-6733df09fc62": {
-    "id": "062da1a6-2d08-456f-aac6-6733df09fc62",
-    "title": "Nuevo Chat",
-    "created_at": "2025-09-05T20:07:25.150955+00:00",
-    "last_updated": "2025-09-05T20:07:40.357757+00:00"
+  "dce34fc8-e491-499c-ab58-84c78c497c51": {
+    "id": "dce34fc8-e491-499c-ab58-84c78c497c51",
+    "title": "Interacción inicial amigable y desafiant",
+    "created_at": "2025-11-01T20:53:28.581881+00:00",
+    "last_updated": "2025-11-01T20:54:13.707445+00:00"
   }
 }

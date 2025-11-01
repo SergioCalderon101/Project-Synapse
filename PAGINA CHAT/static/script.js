@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentChatId = null;
     let isLoading = false;
 
-    // --- Funciones UI (createMessageElement, displayPdfLink, clearChatLog, addMessageToLog - sin cambios) ---
+    // --- Funciones UI (createMessageElement, clearChatLog, addMessageToLog) ---
     function createMessageElement(type, content, isHTML = false) {
         const messageWrapper = document.createElement("div");
         messageWrapper.className = `message ${type === "usuario" ? "user-message" : type === "bot" ? "bot-message" : "error-message"}`;
@@ -25,12 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (type === "error") { const p = document.createElement("strong"); p.textContent = "Error: "; messageContentDiv.prepend(p); }
         messageWrapper.appendChild(messageContentDiv);
         return messageWrapper;
-    }
-    function displayPdfLink(pdfUrl) {
-        const el = createMessageElement("bot", '', true); const content = el.querySelector('.message-content');
-        const a = document.createElement("a"); a.href = pdfUrl; a.target = "_blank";
-        a.textContent = "📄 Descargar PDF generado"; a.style.color = "#93C5FD"; a.style.textDecoration = "underline";
-        content.appendChild(a); chatLog.appendChild(el); chatLog.scrollTop = chatLog.scrollHeight;
     }
     function clearChatLog() {
         chatLog.innerHTML = ''; if (welcomeMessage) { welcomeMessage.style.display = 'flex'; }
@@ -194,9 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = await response.json();
             addMessageToLog("bot", data.respuesta || "No se recibió respuesta.", true); // Añadir respuesta del bot
-            if (data.link_pdf) {
-                displayPdfLink(data.link_pdf); // Mostrar enlace PDF si existe
-            }
 
             // Actualizar historial por si cambió el título o para mantener consistencia
             // Podríamos optimizar esto para solo recargar si data.new_title existe y es diferente
