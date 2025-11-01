@@ -34,3 +34,9 @@
 2025-11-01 14:53:48,503 - app - INFO - Thread-16 (process_request_thread) - Respuesta enviada exitosamente para chat dce34fc8-e491-499c-ab58-84c78c497c51 (Modelo: gpt-3.5-turbo, PDF Req: False).
 2025-11-01 14:54:11,615 - app - INFO - Thread-18 (process_request_thread) - Procesando mensaje para chat dce34fc8-e491-499c-ab58-84c78c497c51 usando modelo: gpt-3.5-turbo
 2025-11-01 14:54:13,709 - app - INFO - Thread-18 (process_request_thread) - Respuesta enviada exitosamente para chat dce34fc8-e491-499c-ab58-84c78c497c51 (Modelo: gpt-3.5-turbo, PDF Req: False).
+2025-11-01 15:21:12,249 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 15:21:13,701 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 15:21:18,094 - app - WARNING - Thread-7 (process_request_thread) - Error 404: /favicon.ico - The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-01 15:21:21,596 - app - INFO - Thread-8 (process_request_thread) - Nuevo chat creado con ID: 47ce3b56-6e23-4481-bcd6-bb6fbbebe557
+2025-11-01 15:21:24,002 - app - INFO - Thread-10 (process_request_thread) - Procesando mensaje para chat 47ce3b56-6e23-4481-bcd6-bb6fbbebe557 usando modelo: gpt-3.5-turbo
+2025-11-01 15:21:24,946 - app - INFO - Thread-10 (process_request_thread) - Respuesta enviada exitosamente para chat 47ce3b56-6e23-4481-bcd6-bb6fbbebe557 (Modelo: gpt-3.5-turbo).
