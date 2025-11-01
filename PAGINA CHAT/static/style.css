@@ -1,0 +1,546 @@
+/* Importación y Reset (Mantenidos) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #111827;
+    /* Tono oscuro base */
+    color: #D1D5DB;
+    /* Color de texto principal */
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    /* Evitar scroll en el body */
+}
+
+/* LAYOUT PRINCIPAL */
+.main-layout {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+/* --- BARRA LATERAL --- */
+.sidebar {
+    width: 260px;
+    /* Un poco más ancha */
+    background-color: #1F2937;
+    /* Fondo ligeramente más claro que el body */
+    border-right: 1px solid #374151;
+    /* Borde sutil */
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #374151;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #F9FAFB;
+    /* Blanco */
+}
+
+.logo span {
+    color: #60A5FA;
+    /* Azul claro */
+    font-weight: 500;
+}
+
+.new-chat-btn {
+    background: none;
+    border: 1px solid #4B5563;
+    /* Borde gris */
+    color: #D1D5DB;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.new-chat-btn i {
+    font-size: 1.2rem;
+}
+
+.new-chat-btn:hover {
+    background-color: #374151;
+    /* Hover sutil */
+    color: #F9FAFB;
+}
+
+.chat-history {
+    flex-grow: 1;
+    /* Ocupa el espacio disponible */
+    overflow-y: auto;
+    /* Scroll si hay muchos items */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    /* Espacio entre items reducido */
+}
+
+.history-item-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.history-item-container:hover {
+    background-color: #374151;
+    /* Hover en todo el item */
+}
+
+.history-item-container .history-item {
+    flex-grow: 1;
+    padding: 10px 12px;
+    color: #D1D5DB;
+    text-decoration: none;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-color: transparent !important;
+    display: block;
+    cursor: pointer;
+    border-radius: 6px 0 0 6px;
+    /* Redondeo solo a la izquierda si es necesario */
+}
+
+.history-item-container .history-item.active {
+    font-weight: 600;
+    color: #F9FAFB;
+    /* Hacer el texto activo más blanco */
+    /* Podrías añadir un fondo diferente aquí si no usas hover en container */
+    /* background-color: rgba(96, 165, 250, 0.1); */
+}
+
+.delete-chat-btn {
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    font-size: 1.4rem;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 10px;
+    line-height: 1;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    margin-left: 5px;
+    flex-shrink: 0;
+    height: 100%;
+    /* Para alinear verticalmente si es necesario */
+    display: flex;
+    align-items: center;
+    border-radius: 0 6px 6px 0;
+    /* Redondeo a la derecha */
+}
+
+.history-item-container:hover .delete-chat-btn {
+    opacity: 1;
+}
+
+.delete-chat-btn:hover {
+    color: #F87171;
+    opacity: 1;
+}
+
+.history-error {
+    color: #F87171;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+}
+
+
+.sidebar-footer {
+    padding-top: 16px;
+    margin-top: auto;
+    /* Empuja al fondo */
+    border-top: 1px solid #374151;
+    /* ---> AQUI CAMBIO <--- : Usar Flexbox para alinear items del footer */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    /* Espacio entre botón y sección de ajustes */
+}
+
+.sidebar-action {
+    background: none;
+    border: none;
+    color: #D1D5DB;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+    /* Quitar márgenes si usamos gap en el footer */
+    margin: 0;
+}
+
+.sidebar-action i {
+    font-size: 1.1rem;
+}
+
+.sidebar-action:hover {
+    background-color: #374151;
+}
+
+/* --- ÁREA DEL CHAT --- */
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #111827;
+    position: relative;
+}
+
+/* Mensaje de Bienvenida */
+.welcome-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    color: #9CA3AF;
+}
+
+.welcome-container h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #e5e7eb;
+    margin-bottom: 8px;
+}
+
+/* Contenedor de Mensajes */
+.chat-messages {
+    flex-grow: 1;
+    padding: 24px 40px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Estilo base del mensaje */
+.message {
+    display: flex;
+    gap: 12px;
+    max-width: 85%;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.message-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.message-content {
+    padding: 12px 16px;
+    border-radius: 10px;
+    line-height: 1.6;
+    font-size: 1rem;
+    word-wrap: break-word;
+}
+
+/* Mensaje del Usuario */
+.user-message {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.user-message .message-content {
+    background-color: #2563EB;
+    color: #F9FAFB;
+    border-radius: 10px 10px 0 10px;
+}
+
+/* Mensaje del Bot */
+.bot-message {
+    align-self: flex-start;
+}
+
+.bot-message .message-icon {
+    background-color: #059669;
+    color: #F9FAFB;
+}
+
+.bot-message .message-content {
+    background-color: #4B5563;
+    color: #E5E7EB;
+    border-radius: 0 10px 10px 10px;
+}
+
+.bot-message strong {
+    color: #93C5FD;
+    font-weight: 600;
+}
+
+.bot-message ul,
+.bot-message ol {
+    margin: 8px 0 8px 24px;
+}
+
+.bot-message code {
+    background-color: #111827;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+}
+
+.bot-message pre {
+    background-color: #111827;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.bot-message pre code {
+    padding: 0;
+    background: none;
+}
+
+/* --- ÁREA DE INPUT --- */
+.input-area {
+    padding: 16px 40px;
+    background-color: #111827;
+    border-top: 1px solid #374151;
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+#user-input {
+    flex-grow: 1;
+    padding: 12px 16px;
+    border: 1px solid #4B5563;
+    border-radius: 8px;
+    background-color: #1F2937;
+    /* Fondo input - CONSISTENTE */
+    color: #F9FAFB;
+    /* Texto blanco - CONSISTENTE */
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: none;
+    min-height: 48px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: inherit;
+}
+
+#user-input:focus {
+    outline: none;
+    border-color: #60A5FA;
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3);
+}
+
+#send-btn {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background-color: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: background-color 0.2s ease;
+}
+
+#send-btn:hover {
+    background-color: #1D4ED8;
+}
+
+#send-btn:disabled {
+    background-color: #374151;
+    cursor: not-allowed;
+}
+
+/* --- SCROLLBAR --- */
+/* (Tus estilos de scrollbar - sin cambios) */
+.chat-messages::-webkit-scrollbar,
+.chat-history::-webkit-scrollbar,
+#user-input::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track,
+.chat-history::-webkit-scrollbar-track,
+#user-input::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb,
+.chat-history::-webkit-scrollbar-thumb,
+#user-input::-webkit-scrollbar-thumb {
+    background-color: #4B5563;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover,
+.chat-history::-webkit-scrollbar-thumb:hover,
+#user-input::-webkit-scrollbar-thumb:hover {
+    background-color: #6B7280;
+}
+
+/* --- ANIMACIONES --- */
+/* (Tus animaciones - sin cambios) */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dots {
+    display: flex;
+    gap: 4px;
+    padding: 8px 0;
+}
+
+.dots span {
+    width: 8px;
+    height: 8px;
+    background-color: #60A5FA;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.dots span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-4px);
+    }
+}
+
+/* Mensaje de Error */
+.error-message {
+    color: #F87171;
+    background-color: rgba(248, 113, 113, 0.1);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 10px auto;
+    border-left: 4px solid #F87171;
+    max-width: 80%;
+    animation: fadeIn 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- ESTILOS PARA SECCIÓN DE AJUSTES DEL MODELO (Refinados) --- */
+
+.sidebar-footer .settings-section {
+    /* Quitar margen si el footer usa gap */
+    margin-top: 0;
+    /* Mantener padding lateral consistente con el botón de ajustes si tiene 12px */
+    padding: 0 12px;
+}
+
+.settings-section label[for="modelo-selector"] {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.85em;
+    color: #adb5bd;
+    /* Mantenido gris claro */
+    font-weight: 500;
+}
+
+#modelo-selector {
+    width: 100%;
+    padding: 8px 10px;
+    /* Reducir padding vertical un poco? Ajusta */
+    /* ---> AQUI CAMBIO <--- : Usar colores consistentes con #user-input */
+    background-color: #1F2937;
+    /* Igual que input */
+    color: #F9FAFB;
+    /* Igual que input */
+    border: 1px solid #4B5563;
+    /* Igual que input */
+    border-radius: 6px;
+    /* Igual que botones/items */
+    font-size: 0.9em;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* Flecha personalizada (mantenida) */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ADB5BD%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px 10px;
+    padding-right: 30px;
+}
+
+#modelo-selector:hover {
+    border-color: #6B7280;
+    /* Borde gris más claro en hover (consistente?) */
+}
+
+#modelo-selector:focus {
+    outline: none;
+    border-color: #60A5FA;
+    /* Borde azul (consistente con input) */
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.3);
+    /* Sombra suave (ajusta si quieres) */
+}

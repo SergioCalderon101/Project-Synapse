@@ -1,0 +1,15 @@
+2025-09-05 14:06:19,510 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-09-05 14:06:19,517 - app - INFO - MainThread - 'templates' creado.
+2025-09-05 14:06:19,519 - app - INFO - MainThread - 'static' creado.
+2025-09-05 14:06:23,937 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-09-05 14:06:49,689 - app - WARNING - Thread-6 (process_request_thread) - Error 404: /favicon.ico - The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-09-05 14:06:57,467 - app - INFO - Thread-8 (process_request_thread) - Procesando mensaje para chat 9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5 usando modelo: gpt-3.5-turbo
+2025-09-05 14:06:58,958 - app - INFO - Thread-8 (process_request_thread) - Respuesta enviada exitosamente para chat 9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5 (Modelo: gpt-3.5-turbo, PDF Req: False).
+2025-09-05 14:07:19,968 - app - INFO - Thread-10 (process_request_thread) - Procesando mensaje para chat 9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5 usando modelo: gpt-3.5-turbo
+2025-09-05 14:07:21,261 - app - INFO - Thread-10 (process_request_thread) - Intentando generar título para chat 9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5...
+2025-09-05 14:07:21,765 - app - INFO - Thread-10 (process_request_thread) - Título generado por IA validado: 'Asistente Inteligente Synapse AI.'
+2025-09-05 14:07:21,766 - app - INFO - Thread-10 (process_request_thread) - Título generado. Actualizando metadata para 9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5: 'Asistente Inteligente Synapse AI.'
+2025-09-05 14:07:21,792 - app - INFO - Thread-10 (process_request_thread) - Respuesta enviada exitosamente para chat 9fdd8e69-61a5-4bcd-8cd1-eae98a7b94b5 (Modelo: gpt-3.5-turbo, PDF Req: False).
+2025-09-05 14:07:25,158 - app - INFO - Thread-12 (process_request_thread) - Nuevo chat creado con ID: 062da1a6-2d08-456f-aac6-6733df09fc62
+2025-09-05 14:07:33,281 - app - INFO - Thread-14 (process_request_thread) - Procesando mensaje para chat 062da1a6-2d08-456f-aac6-6733df09fc62 usando modelo: gpt-3.5-turbo
+2025-09-05 14:07:40,380 - app - INFO - Thread-14 (process_request_thread) - Respuesta enviada exitosamente para chat 062da1a6-2d08-456f-aac6-6733df09fc62 (Modelo: gpt-3.5-turbo, PDF Req: False).

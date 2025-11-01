@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Synapse AI</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="static/style.css">
+    <script src="static/script.js" defer></script>
+</head>
+
+<body>
+    <div class="main-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">Synapse <span>AI</span></div>
+                <button class="new-chat-btn" title="Nuevo Chat">
+                    <i class='bx bx-plus'></i>
+                </button>
+            </div>
+            <nav class="chat-history">
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-action">
+                    <i class='bx bx-cog'></i> Ajustes
+                </button>
+
+                <div class="settings-section">
+                    <label for="modelo-selector">Modelo AI:</label>
+                    <select id="modelo-selector" name="modelo">
+                        <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo (Rápido)</option>
+                        <option value="gpt-4o">GPT-4o (Último)</option>
+                        <option value="gpt-4">GPT-4 (Potente)</option>
+                        <option value="gpt-4.1-mini">GPT-4.1 Mini (Eficiente)</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <main class="chat-area">
+            <div id="welcome-message" class="welcome-container">
+                <h1>Synapse AI</h1>
+                <p>¿En qué puedo ayudarte hoy?</p>
+            </div>
+            <div id="chat-log" class="chat-messages">
+            </div>
+            <div class="input-area">
+                <textarea id="user-input" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
+                <button id="send-btn" title="Enviar Mensaje">
+                    <i class='bx bxs-send'></i>
+                </button>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
