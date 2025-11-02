@@ -1,6 +1,6 @@
 # Synapse AI - Chat Web Inteligente
 
-Este proyecto es una aplicación web de chat basada en Flask que utiliza modelos de OpenAI para responder preguntas de manera inteligente. Incluye una interfaz moderna, historial de chats y selección de modelo AI.
+Este proyecto es una aplicación web de chat basada en Flask que utiliza modelos de OpenAI para responder preguntas de manera inteligente. Incluye una interfaz , historial de chats y selección de modelo AI.
 
 ## Estructura de Carpetas
 

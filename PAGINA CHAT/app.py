@@ -7,7 +7,6 @@ import sys
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple, Any
-
 from flask import Flask, request, jsonify, render_template, send_from_directory, abort
 from flask_cors import CORS
 from openai import OpenAI, APIError
@@ -27,7 +26,7 @@ class Config:
         "gpt-3.5-turbo",
         "gpt-4o",
         "gpt-4",
-        "gpt-4o-mini"  # Modelo corregido
+        "gpt-4o-mini"  
     ]
 
     # Modelo por defecto
@@ -69,7 +68,7 @@ class Config:
 
 config = Config()
 
-# --- 2. Inicialización de Flask, CORS y Logging Mejorado ---
+# --- 2. Inicialización de Flask, CORS y Logging  ---
 app = Flask(__name__, template_folder=config.TEMPLATES_FOLDER,
             static_folder=config.STATIC_FOLDER)
 cors_origins = config.CORS_ORIGINS.split(
@@ -152,8 +151,6 @@ def load_metadata() -> Dict[str, Dict[str, Any]]:
                 except Exception as e:
                     app.logger.exception(
                         f"Error inesperado cargando metadatos: {e}")
-            # else: # No es necesario loguear si no existe, se crea al guardar
-            #     app.logger.info(f"Archivo de metadatos {config.METADATA_FILE} no encontrado.")
     except TimeoutError:
         app.logger.error(
             f"Timeout esperando el lock para leer {config.METADATA_FILE}.")

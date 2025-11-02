@@ -72,3 +72,9 @@
 2025-11-01 19:37:11,084 - app - INFO - Thread-27 (process_request_thread) - Nuevo chat creado con ID: 89dcdcd5-a0a1-4883-bc10-d01db4038f83
 2025-11-01 19:37:11,120 - app - INFO - Thread-29 (process_request_thread) - Procesando mensaje para chat 89dcdcd5-a0a1-4883-bc10-d01db4038f83 usando modelo: gpt-3.5-turbo
 2025-11-01 19:37:11,685 - app - INFO - Thread-29 (process_request_thread) - Respuesta enviada exitosamente para chat 89dcdcd5-a0a1-4883-bc10-d01db4038f83 (Modelo: gpt-3.5-turbo).
+2025-11-01 19:42:39,735 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 19:43:20,524 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 19:43:50,587 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 19:47:30,341 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 19:47:30,345 - app - INFO - MainThread - 'templates' creado.
+2025-11-01 19:47:30,346 - app - INFO - MainThread - 'static' creado.
