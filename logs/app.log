@@ -40,3 +40,35 @@
 2025-11-01 15:21:21,596 - app - INFO - Thread-8 (process_request_thread) - Nuevo chat creado con ID: 47ce3b56-6e23-4481-bcd6-bb6fbbebe557
 2025-11-01 15:21:24,002 - app - INFO - Thread-10 (process_request_thread) - Procesando mensaje para chat 47ce3b56-6e23-4481-bcd6-bb6fbbebe557 usando modelo: gpt-3.5-turbo
 2025-11-01 15:21:24,946 - app - INFO - Thread-10 (process_request_thread) - Respuesta enviada exitosamente para chat 47ce3b56-6e23-4481-bcd6-bb6fbbebe557 (Modelo: gpt-3.5-turbo).
+2025-11-01 17:53:53,282 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 17:53:57,051 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 17:54:04,025 - app - WARNING - Thread-6 (process_request_thread) - Error 404: /favicon.ico - The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-01 17:54:10,686 - app - INFO - Thread-9 (process_request_thread) - DELETE /chat/47ce3b56-6e23-4481-bcd6-bb6fbbebe557
+2025-11-01 17:54:10,702 - app - INFO - Thread-9 (process_request_thread) - Metadata eliminada: 47ce3b56-6e23-4481-bcd6-bb6fbbebe557
+2025-11-01 17:54:10,707 - app - INFO - Thread-9 (process_request_thread) - Archivo eliminado: chats\47ce3b56-6e23-4481-bcd6-bb6fbbebe557.json
+2025-11-01 17:54:13,758 - app - INFO - Thread-11 (process_request_thread) - DELETE /chat/dce34fc8-e491-499c-ab58-84c78c497c51
+2025-11-01 17:54:13,769 - app - INFO - Thread-11 (process_request_thread) - Metadata eliminada: dce34fc8-e491-499c-ab58-84c78c497c51
+2025-11-01 17:54:13,773 - app - INFO - Thread-11 (process_request_thread) - Archivo eliminado: chats\dce34fc8-e491-499c-ab58-84c78c497c51.json
+2025-11-01 17:54:15,126 - app - INFO - Thread-13 (process_request_thread) - Nuevo chat creado con ID: 84995868-60d1-4128-b935-aa028ba0c585
+2025-11-01 19:01:25,340 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 19:01:29,435 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-01 19:25:53,355 - app - INFO - Thread-7 (process_request_thread) - Procesando mensaje para chat 84995868-60d1-4128-b935-aa028ba0c585 usando modelo: gpt-3.5-turbo
+2025-11-01 19:25:54,856 - app - INFO - Thread-7 (process_request_thread) - Respuesta enviada exitosamente para chat 84995868-60d1-4128-b935-aa028ba0c585 (Modelo: gpt-3.5-turbo).
+2025-11-01 19:25:57,893 - app - INFO - Thread-9 (process_request_thread) - DELETE /chat/84995868-60d1-4128-b935-aa028ba0c585
+2025-11-01 19:25:57,900 - app - INFO - Thread-9 (process_request_thread) - Metadata eliminada: 84995868-60d1-4128-b935-aa028ba0c585
+2025-11-01 19:25:57,901 - app - INFO - Thread-9 (process_request_thread) - Archivo eliminado: chats\84995868-60d1-4128-b935-aa028ba0c585.json
+2025-11-01 19:32:00,375 - app - INFO - Thread-15 (process_request_thread) - Nuevo chat creado con ID: a0526f15-618d-4b6f-9d0e-028d8f1f55dc
+2025-11-01 19:32:00,402 - app - INFO - Thread-17 (process_request_thread) - Procesando mensaje para chat a0526f15-618d-4b6f-9d0e-028d8f1f55dc usando modelo: gpt-3.5-turbo
+2025-11-01 19:32:01,611 - app - INFO - Thread-17 (process_request_thread) - Respuesta enviada exitosamente para chat a0526f15-618d-4b6f-9d0e-028d8f1f55dc (Modelo: gpt-3.5-turbo).
+2025-11-01 19:32:05,933 - app - INFO - Thread-19 (process_request_thread) - DELETE /chat/a0526f15-618d-4b6f-9d0e-028d8f1f55dc
+2025-11-01 19:32:05,938 - app - INFO - Thread-19 (process_request_thread) - Metadata eliminada: a0526f15-618d-4b6f-9d0e-028d8f1f55dc
+2025-11-01 19:32:05,940 - app - INFO - Thread-19 (process_request_thread) - Archivo eliminado: chats\a0526f15-618d-4b6f-9d0e-028d8f1f55dc.json
+2025-11-01 19:32:07,534 - app - INFO - Thread-21 (process_request_thread) - Nuevo chat creado con ID: 95d91973-6668-41b1-b4d5-7fa3f0337ff4
+2025-11-01 19:32:07,559 - app - INFO - Thread-23 (process_request_thread) - Procesando mensaje para chat 95d91973-6668-41b1-b4d5-7fa3f0337ff4 usando modelo: gpt-3.5-turbo
+2025-11-01 19:32:08,309 - app - INFO - Thread-23 (process_request_thread) - Respuesta enviada exitosamente para chat 95d91973-6668-41b1-b4d5-7fa3f0337ff4 (Modelo: gpt-3.5-turbo).
+2025-11-01 19:32:10,606 - app - INFO - Thread-25 (process_request_thread) - DELETE /chat/95d91973-6668-41b1-b4d5-7fa3f0337ff4
+2025-11-01 19:32:10,612 - app - INFO - Thread-25 (process_request_thread) - Metadata eliminada: 95d91973-6668-41b1-b4d5-7fa3f0337ff4
+2025-11-01 19:32:10,613 - app - INFO - Thread-25 (process_request_thread) - Archivo eliminado: chats\95d91973-6668-41b1-b4d5-7fa3f0337ff4.json
+2025-11-01 19:37:11,084 - app - INFO - Thread-27 (process_request_thread) - Nuevo chat creado con ID: 89dcdcd5-a0a1-4883-bc10-d01db4038f83
+2025-11-01 19:37:11,120 - app - INFO - Thread-29 (process_request_thread) - Procesando mensaje para chat 89dcdcd5-a0a1-4883-bc10-d01db4038f83 usando modelo: gpt-3.5-turbo
+2025-11-01 19:37:11,685 - app - INFO - Thread-29 (process_request_thread) - Respuesta enviada exitosamente para chat 89dcdcd5-a0a1-4883-bc10-d01db4038f83 (Modelo: gpt-3.5-turbo).

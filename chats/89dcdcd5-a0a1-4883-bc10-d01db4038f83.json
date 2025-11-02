@@ -5,10 +5,10 @@
   },
   {
     "role": "user",
-    "content": "hola"
+    "content": "hello"
   },
   {
     "role": "assistant",
-    "content": "¡Hola! ¿En qué puedo ayudarte hoy?"
+    "content": "Hello! How can I assist you today?"
   }
 ]

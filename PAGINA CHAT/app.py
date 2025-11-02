@@ -2,8 +2,6 @@
 import os
 import json
 import uuid
-import re
-import shutil
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
@@ -23,33 +21,44 @@ load_dotenv()
 class Config:
     """Clase para centralizar la configuración de la aplicación."""
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_APIKEY")
-    # Modelos soportados por la app (puedes agregar aquí los que quieras permitir)
+
+    # Modelos soportados por la app
     SUPPORTED_OPENAI_MODELS = [
         "gpt-3.5-turbo",
         "gpt-4o",
         "gpt-4",
-        "gpt-4.1-mini"  # Nuevo modelo soportado
+        "gpt-4o-mini"  # Modelo corregido
     ]
-    # Modelo por defecto (puedes cambiarlo a 'gpt-4.1-mini' si lo prefieres)
+
+    # Modelo por defecto
     OPENAI_CHAT_MODEL: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-3.5-turbo")
     OPENAI_TITLE_MODEL: str = os.getenv("OPENAI_TITLE_MODEL", "gpt-3.5-turbo")
 
+    # Directorios
     CHATS_DIR: str = "chats"
     METADATA_FILE: str = os.path.join(CHATS_DIR, "chats_metadata.json")
     METADATA_LOCK_FILE: str = os.path.join(CHATS_DIR, "metadata.lock")
-    STATIC_FOLDER: str = 'static'
-    TEMPLATES_FOLDER: str = 'templates'
-    LOGS_FOLDER: str = 'logs'
-    LOG_FILE: str = os.path.join(LOGS_FOLDER, 'app.log')
+    STATIC_FOLDER: str = "static"
+    TEMPLATES_FOLDER: str = "templates"
+    LOGS_FOLDER: str = "logs"
+    LOG_FILE: str = os.path.join(LOGS_FOLDER, "app.log")
 
+    # Configuración de logging y servidor
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
-    # Asegúrate de que este default sea el que prefieres al iniciar
     FLASK_DEBUG: bool = os.getenv("FLASK_DEBUG", "True").lower() == "true"
     CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "*")
 
+    # Configuración del chat
     MAX_TITLE_LENGTH: int = 40
     MAX_CONTEXT_LENGTH: int = 12
     TITLE_GENERATION_MIN_MESSAGES: int = 5
+
+    @classmethod
+    def validate_model(cls, model: str) -> str:
+        """Valida que el modelo esté soportado."""
+        if model not in cls.SUPPORTED_OPENAI_MODELS:
+            return cls.OPENAI_CHAT_MODEL
+        return model
 
     # Mensaje por defecto del sistema
     DEFAULT_SYSTEM_MESSAGE: Dict[str, str] = {
@@ -248,25 +257,34 @@ def save_chat_messages(chat_id: str, messages: List[Dict[str, str]]) -> None:
 # --- 5. Funciones Auxiliares Específicas ---
 
 
+def _get_api_parameters(purpose: str) -> Dict[str, Any]:
+    """Devuelve los parámetros específicos para cada tipo de llamada a la API."""
+    base_params = {"temperature": 0.6, "max_tokens": 2000, "top_p": 0.9}
+
+    if purpose == "chat":
+        return {**base_params, "frequency_penalty": 0.1, "presence_penalty": 0.1}
+    elif purpose == "title":
+        return {"temperature": 0.3, "max_tokens": 20, "n": 1, "stop": None}
+
+    return base_params
+
+
 def _call_openai_api(messages_for_api: List[Dict[str, str]], model_to_use: str, purpose: str = "chat") -> Optional[str]:
     """Llama a la API de Chat Completions de OpenAI usando el modelo especificado."""
     if not client:
         app.logger.error(
             f"Intento de llamar a OpenAI API ({purpose}) sin cliente inicializado.")
         return None
+
     try:
         app.logger.debug(
             f"Enviando {len(messages_for_api)} mensajes a OpenAI API ({purpose}, modelo: {model_to_use})...")
-        params = {"model": model_to_use, "messages": messages_for_api}
-        if purpose == "chat":
-            params.update({
-                "temperature": 0.6, "max_tokens": 2000, "top_p": 0.9,
-                "frequency_penalty": 0.1, "presence_penalty": 0.1
-            })
-        elif purpose == "title":
-            params.update({
-                "temperature": 0.3, "max_tokens": 20, "n": 1, "stop": None
-            })
+
+        params = {
+            "model": model_to_use,
+            "messages": messages_for_api,
+            **_get_api_parameters(purpose)
+        }
 
         response = client.chat.completions.create(**params)
 
@@ -277,8 +295,9 @@ def _call_openai_api(messages_for_api: List[Dict[str, str]], model_to_use: str, 
             return reply
         else:
             app.logger.error(
-                f"Respuesta inválida/vacía de OpenAI API ({purpose}, modelo: {model_to_use}): {response}")
+                f"Respuesta inválida/vacía de OpenAI API ({purpose}, modelo: {model_to_use})")
             return None
+
     except APIError as e:
         app.logger.error(
             f"Error de API OpenAI ({purpose}, modelo: {model_to_use}): {e.status_code} - {e.message}")
@@ -466,7 +485,8 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
             app.logger.warning(f"POST inválido ({chat_id}): Mensaje vacío.")
             return jsonify({"error": "Mensaje vacío."}), 400
 
-        modelo_seleccionado = data.get("modelo", config.OPENAI_CHAT_MODEL)
+        modelo_seleccionado = config.validate_model(
+            data.get("modelo", config.OPENAI_CHAT_MODEL))
         app.logger.info(
             f"Procesando mensaje para chat {chat_id} usando modelo: {modelo_seleccionado}")
 
