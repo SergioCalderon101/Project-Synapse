@@ -80,4 +80,4 @@ Acceder en: [http://localhost:5000](http://localhost:5000)
 
 **Autor:** Sergio Calderon  
 **GitHub:** [@SergioCalderon101](https://github.com/SergioCalderon101)  
-**Repositorio:** [chatbot](https://github.com/SergioCalderon101/chatbot)
+**Repositorio:** [Prject-Synapse](https://github.com/SergioCalderon101/Project-Synapse)
