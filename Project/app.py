@@ -1,4 +1,4 @@
-# --- app.py (v6.0 - Chat AI sin funcionalidad PDF) ---
+"""Synapse AI - Aplicación de chat con IA usando OpenAI API."""
 import os
 import json
 import uuid
@@ -13,15 +13,14 @@ from openai import OpenAI, APIError
 from dotenv import load_dotenv
 from filelock import FileLock
 
-# --- 1. Configuración Centralizada ---
+# Configuración
 load_dotenv()
 
 
 class Config:
-    """Clase para centralizar la configuración de la aplicación."""
+    """Configuración centralizada de la aplicación."""
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_APIKEY")
 
-    # Modelos soportados por la app
     SUPPORTED_OPENAI_MODELS = [
         "gpt-3.5-turbo",
         "gpt-4o",
@@ -29,11 +28,10 @@ class Config:
         "gpt-4o-mini"
     ]
 
-    # Modelo por defecto
     OPENAI_CHAT_MODEL: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-3.5-turbo")
     OPENAI_TITLE_MODEL: str = os.getenv("OPENAI_TITLE_MODEL", "gpt-3.5-turbo")
 
-    # Directorios (relativos al archivo app.py)
+    # Directorios
     BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
     CHATS_DIR: str = os.path.join(BASE_DIR, "chats")
     METADATA_FILE: str = os.path.join(CHATS_DIR, "chats_metadata.json")
@@ -43,12 +41,11 @@ class Config:
     LOGS_FOLDER: str = os.path.join(BASE_DIR, "logs")
     LOG_FILE: str = os.path.join(LOGS_FOLDER, "app.log")
 
-    # Configuración de logging y servidor
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
     FLASK_DEBUG: bool = os.getenv("FLASK_DEBUG", "True").lower() == "true"
     CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "*")
 
-    # Configuración del chat
+    # Chat
     MAX_TITLE_LENGTH: int = 40
     MAX_CONTEXT_LENGTH: int = 12
     TITLE_GENERATION_MIN_MESSAGES: int = 5
@@ -60,7 +57,6 @@ class Config:
             return cls.OPENAI_CHAT_MODEL
         return model
 
-    # Mensaje por defecto del sistema
     DEFAULT_SYSTEM_MESSAGE: Dict[str, str] = {
         "role": "system",
         "content": """Eres Synapse AI, un asistente inteligente, adaptable y profesional. Tu propósito es proporcionar ayuda útil, precisa y contextualmente apropiada a cada usuario.\n\n## Principios Fundamentales\n\n**Análisis Inteligente:**\n- Evalúa cada consulta en su contexto completo\n- Identifica la intención real del usuario más allá de las palabras exactas\n- Adapta tu enfoque según la complejidad y naturaleza de la solicitud\n- Para problemas complejos, descompón en pasos lógicos cuando sea útil\n\n**Comunicación Efectiva:**\n- Sé directo y conciso, pero completo\n- Estructura tu respuesta de manera clara y lógica\n- Usa formato Markdown apropiadamente para mejorar la legibilidad\n- Adapta tu tono al contexto (técnico, casual, formal según corresponda)\n- Evita redundancias y información innecesaria\n\n**Gestión de Contexto:**\n- Mantén coherencia con el historial de conversación\n- Construye sobre intercambios anteriores de manera inteligente\n- Pide clarificaciones solo cuando realmente agreguen valor\n- Recuerda preferencias y patrones del usuario cuando sea relevante\n\n**Manejo de Contenido:**\n- Genera contenido completo y bien estructurado en tu respuesta\n- Organiza información compleja usando encabezados, listas y formatos apropiados\n- Proporciona ejemplos prácticos cuando sea útil\n- Incluye consideraciones importantes o limitaciones cuando sea relevante\n\n**Resolución de Problemas:**\n- Si una solicitud es ambigua, ofrece la interpretación más probable y menciona alternativas si es necesario\n- Para errores o problemas técnicos, proporciona diagnóstico y soluciones paso a paso\n- Adapta el nivel de detalle técnico al conocimiento aparente del usuario\n- Sugiere mejores prácticas cuando sea apropiado\n\n**Calidad y Precisión:**\n- Prioriza respuestas precisas sobre respuestas rápidas\n- Reconoce abiertamente las limitaciones de tu conocimiento\n- Para información que cambia frecuentemente, sugiere verificación cuando sea apropiado\n- Mantén objetividad, especialmente en temas controvertidos\n\n## Comportamientos Adaptativos\n\n- **Consultas técnicas:** Proporciona detalles técnicos precisos, código limpio, y explica conceptos complejos\n- **Solicitudes creativas:** Ofrece ideas originales y bien desarrolladas\n- **Problemas de análisis:** Presenta razonamiento estructurado y considera múltiples perspectivas\n- **Tareas de escritura:** Crea contenido apropiado para el propósito y audiencia especificados\n\nTu objetivo es ser genuinamente útil adaptándote inteligentemente a las necesidades específicas de cada interacción."""
@@ -69,7 +65,7 @@ class Config:
 
 config = Config()
 
-# --- 2. Inicialización de Flask, CORS y Logging  ---
+# Inicialización de Flask
 app = Flask(__name__, template_folder=config.TEMPLATES_FOLDER,
             static_folder=config.STATIC_FOLDER)
 cors_origins = config.CORS_ORIGINS.split(
@@ -102,7 +98,7 @@ app.logger.addHandler(stream_handler)
 app.logger.setLevel(getattr(logging, config.LOG_LEVEL, logging.INFO))
 app.logger.propagate = False
 
-# --- 3. Cliente OpenAI ---
+# Cliente OpenAI
 client: Optional[OpenAI] = None
 if config.OPENAI_API_KEY:
     try:
@@ -114,9 +110,9 @@ if config.OPENAI_API_KEY:
         app.logger.exception(f"Error fatal inicializando OpenAI: {e}")
 else:
     app.logger.warning(
-        "OPENAI_APIKEY no encontrada en variables de entorno. Funcio|nalidad AI deshabilitada.")
+        "OPENAI_APIKEY no encontrada en variables de entorno. Funcionalidad AI deshabilitada.")
 
-# --- 4. Funciones Auxiliares (Chats, Metadatos con Locking) ---
+# Funciones auxiliares
 
 
 def ensure_chats_dir_exists() -> None:
@@ -218,7 +214,6 @@ def load_chat_messages(chat_id: str) -> Optional[List[Dict[str, str]]]:
                 f"Chat {chat_id} no comenzaba con system prompt. Añadiéndolo.")
             messages.insert(0, config.DEFAULT_SYSTEM_MESSAGE.copy())
         else:
-            # Siempre actualizar por si cambia
             messages[0]['content'] = config.DEFAULT_SYSTEM_MESSAGE['content']
         messages = _apply_context_limit(messages)
         app.logger.debug(
@@ -251,10 +246,8 @@ def save_chat_messages(chat_id: str, messages: List[Dict[str, str]]) -> None:
     except Exception as e:
         app.logger.exception(f"Error inesperado guardando chat {chat_id}: {e}")
 
-# --- 5. Funciones Auxiliares Específicas ---
 
-
-# Parámetros de API según propósito
+# Parámetros de API
 API_PARAMETERS = {
     "chat": {
         "temperature": 0.6,
@@ -364,14 +357,13 @@ def _update_chat_title_if_needed(chat_id: str, messages: List[Dict[str, str]], m
         if new_title:
             app.logger.info(
                 f"Título generado. Actualizando metadata para {chat_id}: '{new_title}'")
-            # Actualizar el dict de metadata directamente
             metadata[chat_id]["title"] = new_title
             new_title_generated = new_title
         else:
             app.logger.warning(f"Generación de título para {chat_id} falló.")
     return new_title_generated
 
-# --- 6. Rutas Flask ---
+# Rutas
 
 
 @app.route("/")
@@ -452,8 +444,6 @@ def delete_chat(chat_id: str) -> Tuple[Any, int]:
     else:
         abort(404, description=f"Chat no encontrado: {chat_id}.")
 
-# --- Ruta POST /chat/<chat_id> ---
-
 
 @app.route("/chat/<chat_id>", methods=["POST"])
 def process_chat_message(chat_id: str) -> Tuple[Any, int]:
@@ -490,10 +480,7 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
             f"Error procesando JSON de entrada para chat {chat_id}: {e}")
         return jsonify({"error": "Error procesando datos de entrada."}), 400
 
-    # Añadir mensaje de usuario al historial
     messages.append({"role": "user", "content": user_input})
-
-    # Procesar mensaje con la IA
     messages_for_api = _apply_context_limit(messages)
     assistant_reply_content = _call_openai_api(
         messages_for_api,
@@ -505,10 +492,7 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
         app.logger.error(f"Llamada API fallida para chat {chat_id}")
         return jsonify({"error": "Error contactando asistente AI. Intenta de nuevo."}), 503
 
-    # Guardar respuesta del asistente
     messages.append({"role": "assistant", "content": assistant_reply_content})
-
-    # Actualizar metadatos y título si es necesario
     metadata = load_metadata()
     new_title = _update_chat_title_if_needed(chat_id, messages, metadata)
 
@@ -537,7 +521,7 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
         f"Respuesta enviada exitosamente para chat {chat_id} (Modelo: {modelo_seleccionado}).")
     return jsonify(response_data), 200
 
-# --- 7. Manejadores de Errores ---
+# Manejadores de errores
 
 
 @app.errorhandler(404)
@@ -560,17 +544,12 @@ def handle_generic_exception(error: Exception) -> Tuple[Any, int]:
     return jsonify(error="Ocurrió un error inesperado."), 500
 
 
-# --- 8. Bloque de Ejecución ---
 if __name__ == "__main__":
     try:
         ensure_chats_dir_exists()
-        for folder in [config.TEMPLATES_FOLDER, config.STATIC_FOLDER]:
-            if not os.path.exists(folder):
-                os.makedirs(folder)
-                app.logger.info(f"'{folder}' creado.")
     except OSError as e:
         app.logger.critical(
-            f"CRITICAL: No se pudo crear directorio '{e.filename}'. {e}")
+            f"CRITICAL: No se pudo crear directorio de chats '{e.filename}': {e}")
         sys.exit(1)
     except Exception as e:
         app.logger.critical(f"CRITICAL: Error inicializando directorios: {e}")
@@ -587,14 +566,13 @@ if __name__ == "__main__":
     print(f" Modo Debug Flask: {config.FLASK_DEBUG}")
     print(f" Nivel de Log: {config.LOG_LEVEL}")
     print(f" Orígenes CORS: {config.CORS_ORIGINS}")
-    print(" URL: http://localhost:5000 (o http://<your-ip>:5000)")
+    print(" URL Local: http://127.0.0.1:5000")
     print("\nIniciando servidor Flask...")
 
     app.run(
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=5000,
         debug=config.FLASK_DEBUG,
         threaded=True,
         use_reloader=config.FLASK_DEBUG
     )
-# --- Fin del archivo ---
