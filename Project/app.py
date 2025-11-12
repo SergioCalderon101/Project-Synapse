@@ -33,13 +33,14 @@ class Config:
     OPENAI_CHAT_MODEL: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-3.5-turbo")
     OPENAI_TITLE_MODEL: str = os.getenv("OPENAI_TITLE_MODEL", "gpt-3.5-turbo")
 
-    # Directorios
-    CHATS_DIR: str = "chats"
+    # Directorios (relativos al archivo app.py)
+    BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
+    CHATS_DIR: str = os.path.join(BASE_DIR, "chats")
     METADATA_FILE: str = os.path.join(CHATS_DIR, "chats_metadata.json")
     METADATA_LOCK_FILE: str = os.path.join(CHATS_DIR, "metadata.lock")
-    STATIC_FOLDER: str = "static"
-    TEMPLATES_FOLDER: str = "templates"
-    LOGS_FOLDER: str = "logs"
+    STATIC_FOLDER: str = os.path.join(BASE_DIR, "static")
+    TEMPLATES_FOLDER: str = os.path.join(BASE_DIR, "templates")
+    LOGS_FOLDER: str = os.path.join(BASE_DIR, "logs")
     LOG_FILE: str = os.path.join(LOGS_FOLDER, "app.log")
 
     # Configuración de logging y servidor
