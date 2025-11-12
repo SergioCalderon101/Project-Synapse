@@ -1,4 +1,4 @@
-// --- script.js (v6.0 - Optimizado y limpio) ---
+// --- script.js (v6.1 - Limpio y funcional) ---
 document.addEventListener("DOMContentLoaded", () => {
     // --- Elementos UI ---
     const elements = {
@@ -79,7 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const History = {
         async loadList() {
             if (!elements.chatHistoryNav) return;
-            console.log("Cargando historial...");
 
             const previouslyActiveId = state.currentChatId;
             let historyData = [];
@@ -93,10 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 this.renderHistory(historyData);
 
-                // Solo mostrar mensaje de bienvenida si no hay chats
-                // No crear automáticamente un nuevo chat
                 if (historyData.length === 0) {
-                    console.log("No hay chats en el historial. Esperando input del usuario...");
                     if (elements.welcomeMessage) {
                         elements.welcomeMessage.style.display = 'flex';
                     }
@@ -164,7 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (state.isLoading) return;
 
             UI.setLoadingState(true);
-            console.log(`Intentando borrar chat: ${chatId}`);
 
             try {
                 const response = await fetch(`/chat/${chatId}`, { method: 'DELETE' });
@@ -177,11 +172,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     throw new Error(errorMsg);
                 }
 
-                console.log(`Chat ${chatId} borrado en backend.`);
                 itemElement.remove();
 
                 if (state.currentChatId === chatId) {
-                    console.log("El chat activo fue borrado.");
                     state.currentChatId = null;
                     UI.clearChatLog();
 
@@ -192,8 +185,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         const firstLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${firstChatId}"]`);
                         if (firstLink) firstLink.classList.add('active');
                     } else {
-                        // No crear automáticamente un nuevo chat, solo mostrar mensaje de bienvenida
-                        console.log("No quedan chats. Esperando input del usuario...");
                         if (elements.welcomeMessage) {
                             elements.welcomeMessage.style.display = 'flex';
                         }
@@ -216,7 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (state.isLoading) return;
 
             UI.setLoadingState(true);
-            console.log("Iniciando nuevo chat...");
             UI.clearChatLog();
 
             try {
@@ -225,7 +215,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const data = await response.json();
                 state.currentChatId = data.chat_id;
-                console.log("Nuevo chat iniciado:", state.currentChatId);
 
                 await History.loadList();
                 const newLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${state.currentChatId}"]`);
@@ -243,7 +232,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (state.isLoading) return;
 
             UI.setLoadingState(true);
-            console.log(`Cargando chat: ${chatId}`);
             UI.clearChatLog();
 
             try {
@@ -260,7 +248,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
                     });
                 }
-                console.log(`Chat ${state.currentChatId} cargado.`);
             } catch (error) {
                 console.error("Error cargando chat:", error);
                 UI.addMessageToLog("error", `No se pudo cargar chat: ${error.message}`);
@@ -276,28 +263,20 @@ document.addEventListener("DOMContentLoaded", () => {
         async sendMessage() {
             const messageText = elements.userInput.value.trim();
 
-            // Validaciones básicas
             if (!messageText || state.isLoading) {
                 return;
             }
 
             // Si no hay chat activo, crear uno nuevo automáticamente
             if (!state.currentChatId) {
-                console.log("No hay chat activo. Creando nuevo chat automáticamente...");
                 await this.startNew();
 
-                // Si aún no hay chat después de intentar crear uno, salir
                 if (!state.currentChatId) {
-                    console.error("No se pudo crear un nuevo chat automáticamente.");
                     return;
                 }
             }
 
-            // Obtener modelo seleccionado
             const selectedModel = elements.modelSelector?.value || null;
-            if (!selectedModel) {
-                console.warn("Selector de modelo no encontrado. Usando modelo default del backend.");
-            }
 
             UI.setLoadingState(true);
             const currentText = messageText;
@@ -311,8 +290,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (selectedModel) {
                     requestBody.modelo = selectedModel;
                 }
-
-                console.log("Enviando al backend:", requestBody);
 
                 const response = await fetch(`/chat/${state.currentChatId}`, {
                     method: "POST",
@@ -335,7 +312,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
                 UI.addMessageToLog("bot", data.respuesta || "No se recibió respuesta.", true);
 
-                // Actualizar historial si cambió el título
                 await History.loadList();
 
             } catch (error) {
@@ -349,7 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // --- Event Listeners ---
-    elements.sendButton.addEventListener("click", Chat.sendMessage);
+    elements.sendButton.addEventListener("click", () => Chat.sendMessage());
 
     elements.userInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -358,10 +334,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    elements.userInput.addEventListener('input', UI.adjustTextareaHeight);
+    elements.userInput.addEventListener('input', () => UI.adjustTextareaHeight());
 
     if (elements.newChatButton) {
-        elements.newChatButton.addEventListener("click", Chat.startNew);
+        elements.newChatButton.addEventListener("click", () => Chat.startNew());
     }
 
     // --- Inicialización ---
@@ -371,12 +347,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (mostRecentChatLink) {
             await Chat.load(mostRecentChatLink.dataset.chatId);
-            // Marcar el chat activo
             const activeLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${state.currentChatId}"]`);
             if (activeLink) activeLink.classList.add('active');
         } else {
-            // No hay chats existentes, mostrar mensaje de bienvenida y esperar input del usuario
-            console.log("No hay chats previos. Esperando que el usuario escriba algo...");
             if (elements.welcomeMessage) {
                 elements.welcomeMessage.style.display = 'flex';
             }
