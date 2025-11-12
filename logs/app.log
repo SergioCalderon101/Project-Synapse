@@ -124,3 +124,15 @@
 2025-11-11 19:53:41,161 - app - INFO - Thread-58 (process_request_thread) - Título generado por IA validado: 'Saludos y Bienestar Mutuo'
 2025-11-11 19:53:41,162 - app - INFO - Thread-58 (process_request_thread) - Título generado. Actualizando metadata para 60a59f35-2182-405d-8c90-396e753ca41d: 'Saludos y Bienestar Mutuo'
 2025-11-11 19:53:41,165 - app - INFO - Thread-58 (process_request_thread) - Respuesta enviada exitosamente para chat 60a59f35-2182-405d-8c90-396e753ca41d (Modelo: gpt-3.5-turbo).
+2025-11-11 19:55:50,795 - app - INFO - Thread-60 (process_request_thread) - DELETE /chat/60a59f35-2182-405d-8c90-396e753ca41d
+2025-11-11 19:55:50,801 - app - INFO - Thread-60 (process_request_thread) - Metadata eliminada: 60a59f35-2182-405d-8c90-396e753ca41d
+2025-11-11 19:55:50,803 - app - INFO - Thread-60 (process_request_thread) - Archivo eliminado: chats\60a59f35-2182-405d-8c90-396e753ca41d.json
+2025-11-11 20:01:33,466 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-11 20:06:26,030 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-11 20:06:27,366 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-11 20:06:33,503 - app - WARNING - Thread-6 (process_request_thread) - Error 404: /favicon.ico - The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-11 20:06:36,397 - app - INFO - Thread-7 (process_request_thread) - Nuevo chat creado con ID: 4d28b27a-8860-4505-91c2-77ddb0f0f1ae
+2025-11-11 20:06:36,975 - app - INFO - Thread-9 (process_request_thread) - Procesando mensaje para chat 4d28b27a-8860-4505-91c2-77ddb0f0f1ae usando modelo: gpt-3.5-turbo
+2025-11-11 20:06:38,013 - app - INFO - Thread-9 (process_request_thread) - Respuesta enviada exitosamente para chat 4d28b27a-8860-4505-91c2-77ddb0f0f1ae (Modelo: gpt-3.5-turbo).
+2025-11-11 20:07:47,035 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-11 20:08:30,550 - app - INFO - MainThread - Cliente OpenAI inicializado.

@@ -7,7 +7,7 @@ import sys
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple, Any
-from flask import Flask, request, jsonify, render_template, send_from_directory, abort
+from flask import Flask, request, jsonify, render_template, abort
 from flask_cors import CORS
 from openai import OpenAI, APIError
 from dotenv import load_dotenv
@@ -26,7 +26,7 @@ class Config:
         "gpt-3.5-turbo",
         "gpt-4o",
         "gpt-4",
-        "gpt-4o-mini"  
+        "gpt-4o-mini"
     ]
 
     # Modelo por defecto
@@ -106,7 +106,7 @@ client: Optional[OpenAI] = None
 if config.OPENAI_API_KEY:
     try:
         client = OpenAI(api_key=config.OPENAI_API_KEY)
-        app.logger.info(f"Cliente OpenAI inicializado.")
+        app.logger.info("Cliente OpenAI inicializado.")
         app.logger.debug(
             f"Modelo Chat (Default): {config.OPENAI_CHAT_MODEL}, Modelo Título: {config.OPENAI_TITLE_MODEL}")
     except Exception as e:
@@ -141,7 +141,6 @@ def load_metadata() -> Dict[str, Dict[str, Any]]:
                         loaded_data = json.load(f)
                     if isinstance(loaded_data, dict):
                         metadata = loaded_data
-                        # app.logger.debug(f"Metadatos cargados desde {config.METADATA_FILE}") # Reducir verbosidad
                     else:
                         app.logger.warning(
                             f"{config.METADATA_FILE} contiene datos inválidos. Reiniciando.")
@@ -238,7 +237,7 @@ def save_chat_messages(chat_id: str, messages: List[Dict[str, str]]) -> None:
     chat_file = os.path.join(config.CHATS_DIR, f"{chat_id}.json")
     if not messages or messages[0].get("role") != "system":
         messages = [config.DEFAULT_SYSTEM_MESSAGE.copy()] + (messages or [])
-    else:
+    elif messages[0]['content'] != config.DEFAULT_SYSTEM_MESSAGE['content']:
         messages[0]['content'] = config.DEFAULT_SYSTEM_MESSAGE['content']
     messages_to_save = _apply_context_limit(messages)
     try:
@@ -254,16 +253,27 @@ def save_chat_messages(chat_id: str, messages: List[Dict[str, str]]) -> None:
 # --- 5. Funciones Auxiliares Específicas ---
 
 
+# Parámetros de API según propósito
+API_PARAMETERS = {
+    "chat": {
+        "temperature": 0.6,
+        "max_tokens": 2000,
+        "top_p": 0.9,
+        "frequency_penalty": 0.1,
+        "presence_penalty": 0.1
+    },
+    "title": {
+        "temperature": 0.3,
+        "max_tokens": 20,
+        "n": 1,
+        "stop": None
+    }
+}
+
+
 def _get_api_parameters(purpose: str) -> Dict[str, Any]:
     """Devuelve los parámetros específicos para cada tipo de llamada a la API."""
-    base_params = {"temperature": 0.6, "max_tokens": 2000, "top_p": 0.9}
-
-    if purpose == "chat":
-        return {**base_params, "frequency_penalty": 0.1, "presence_penalty": 0.1}
-    elif purpose == "title":
-        return {"temperature": 0.3, "max_tokens": 20, "n": 1, "stop": None}
-
-    return base_params
+    return API_PARAMETERS.get(purpose, API_PARAMETERS["chat"])
 
 
 def _call_openai_api(messages_for_api: List[Dict[str, str]], model_to_use: str, purpose: str = "chat") -> Optional[str]:
@@ -358,8 +368,6 @@ def _update_chat_title_if_needed(chat_id: str, messages: List[Dict[str, str]], m
             new_title_generated = new_title
         else:
             app.logger.warning(f"Generación de título para {chat_id} falló.")
-    # else: # No es necesario loguear si no se cumplen condiciones
-    #      app.logger.debug(f"No se generan títulos para {chat_id}...")
     return new_title_generated
 
 # --- 6. Rutas Flask ---
@@ -443,18 +451,7 @@ def delete_chat(chat_id: str) -> Tuple[Any, int]:
     else:
         abort(404, description=f"Chat no encontrado: {chat_id}.")
 
-
-@app.route("/static/<path:filename>")
-def static_files(filename: str) -> Any:
-    try:
-        return send_from_directory(app.static_folder, filename)
-    except FileNotFoundError:
-        abort(404, description=f"Archivo no hallado: {filename}.")
-    except Exception as e:
-        app.logger.exception(f"Error sirviendo {filename}:{e}")
-        return jsonify({"error": "Error servidor."}), 500
-
-# ---> AQUI CAMBIO: Ruta POST /chat/<chat_id> REEMPLAZADA <---
+# --- Ruta POST /chat/<chat_id> ---
 
 
 @app.route("/chat/<chat_id>", methods=["POST"])
@@ -507,10 +504,8 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
         app.logger.error(f"Llamada API fallida para chat {chat_id}")
         return jsonify({"error": "Error contactando asistente AI. Intenta de nuevo."}), 503
 
-    final_assistant_reply = assistant_reply_content
-
     # Guardar respuesta del asistente
-    messages.append({"role": "assistant", "content": final_assistant_reply})
+    messages.append({"role": "assistant", "content": assistant_reply_content})
 
     # Actualizar metadatos y título si es necesario
     metadata = load_metadata()
@@ -533,7 +528,7 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
     save_chat_messages(chat_id, messages)
 
     response_data = {
-        "respuesta": final_assistant_reply,
+        "respuesta": assistant_reply_content,
         "timestamp": now_iso,
         "new_title": metadata.get(chat_id, {}).get("title")
     }
@@ -564,19 +559,14 @@ def handle_generic_exception(error: Exception) -> Tuple[Any, int]:
     return jsonify(error="Ocurrió un error inesperado."), 500
 
 
-# --- 8. Bloque de Ejecución (MODIFICADO para arrancar siempre) ---
+# --- 8. Bloque de Ejecución ---
 if __name__ == "__main__":
     try:
         ensure_chats_dir_exists()
-        if not os.path.exists(config.TEMPLATES_FOLDER):
-            os.makedirs(config.TEMPLATES_FOLDER)
-            app.logger.info(f"'{config.TEMPLATES_FOLDER}' creado.")
-        if not os.path.exists(config.STATIC_FOLDER):
-            os.makedirs(config.STATIC_FOLDER)
-            app.logger.info(f"'{config.STATIC_FOLDER}' creado.")
-        if not os.path.exists(config.LOGS_FOLDER):
-            os.makedirs(config.LOGS_FOLDER)
-            app.logger.info(f"'{config.LOGS_FOLDER}' creado.")
+        for folder in [config.TEMPLATES_FOLDER, config.STATIC_FOLDER]:
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+                app.logger.info(f"'{folder}' creado.")
     except OSError as e:
         app.logger.critical(
             f"CRITICAL: No se pudo crear directorio '{e.filename}'. {e}")
@@ -591,12 +581,12 @@ if __name__ == "__main__":
         print("="*60 + "\n", file=sys.stderr)
 
     print("\n" + "="*60)
-    print(" Synapse AI Server")  # Actualizar versión
+    print(" Synapse AI Server")
     print("="*60)
     print(f" Modo Debug Flask: {config.FLASK_DEBUG}")
     print(f" Nivel de Log: {config.LOG_LEVEL}")
     print(f" Orígenes CORS: {config.CORS_ORIGINS}")
-    print(f" URL: http://localhost:5000 (o http://<your-ip>:5000)")
+    print(" URL: http://localhost:5000 (o http://<your-ip>:5000)")
     print("\nIniciando servidor Flask...")
 
     app.run(
@@ -604,6 +594,6 @@ if __name__ == "__main__":
         port=5000,
         debug=config.FLASK_DEBUG,
         threaded=True,
-        use_reloader=config.FLASK_DEBUG  # Recargador solo si debug está activo
+        use_reloader=config.FLASK_DEBUG
     )
 # --- Fin del archivo ---
