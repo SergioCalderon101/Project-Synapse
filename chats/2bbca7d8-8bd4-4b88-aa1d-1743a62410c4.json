@@ -5,10 +5,18 @@
   },
   {
     "role": "user",
-    "content": "hola"
+    "content": "puedes investigar el precio del mercadod e valores?"
   },
   {
     "role": "assistant",
-    "content": "¡Hola! ¿En qué puedo ayudarte hoy?"
+    "content": "¡Claro! Para proporcionarte información precisa sobre el precio del mercado de valores, necesitaría más detalles. ¿Podrías especificar a qué mercado de valores te refieres o si estás buscando información sobre un índice en particular? ¡Estoy aquí para ayudarte!"
+  },
+  {
+    "role": "user",
+    "content": "precio del dolar en mxn"
+  },
+  {
+    "role": "assistant",
+    "content": "¡Por supuesto! El precio del dólar en pesos mexicanos (MXN) puede variar a lo largo del día debido a factores como la oferta y la demanda, así como eventos económicos y políticos. \n\nPara obtener el precio actualizado del dólar en MXN, te recomendaría consultar fuentes confiables como sitios web financieros, aplicaciones móviles de finanzas o incluso preguntar en tu banco local. \n\nSi necesitas más ayuda o información adicional sobre este tema, ¡no dudes en decírmelo!"
   }
 ]
