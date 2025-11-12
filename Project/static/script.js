@@ -1,6 +1,4 @@
-// --- script.js (v6.1 - Limpio y funcional) ---
 document.addEventListener("DOMContentLoaded", () => {
-    // --- Elementos UI ---
     const elements = {
         userInput: document.getElementById("user-input"),
         sendButton: document.getElementById("send-btn"),
@@ -15,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
         modelRadios: document.querySelectorAll('input[name="modelo"]')
     };
 
-    // --- Estado App ---
     let state = {
         currentChatId: null,
         isLoading: false,
@@ -23,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
         settingsOpen: false
     };
 
-    // --- Funciones UI ---
     const UI = {
         createMessageElement(type, content, isHTML = false) {
             const messageWrapper = document.createElement("div");
@@ -104,7 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         initializeModelSelection() {
-            // Cargar modelo guardado
             const savedModel = state.selectedModel;
             const radioToCheck = document.querySelector(`input[name="modelo"][value="${savedModel}"]`);
 
@@ -116,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // --- Funciones de Historia ---
     const History = {
         async loadList() {
             if (!elements.chatHistoryNav) return;
@@ -242,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // --- Funciones de Chat ---
     const Chat = {
         async startNew() {
             if (state.isLoading) return;
@@ -308,7 +301,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Si no hay chat activo, crear uno nuevo automáticamente
             if (!state.currentChatId) {
                 await this.startNew();
 
@@ -365,7 +357,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // --- Event Listeners ---
     elements.sendButton.addEventListener("click", () => Chat.sendMessage());
 
     elements.userInput.addEventListener("keydown", (e) => {
@@ -409,9 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // --- Inicialización ---
     async function initializeApp() {
-        // Inicializar selección de modelo
         UI.initializeModelSelection();
 
         const initialHistory = await History.loadList();

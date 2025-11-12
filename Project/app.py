@@ -259,7 +259,6 @@ API_PARAMETERS = {
     "title": {
         "temperature": 0.3,
         "max_tokens": 20,
-        "n": 1,
         "stop": None
     }
 }
@@ -380,12 +379,12 @@ def new_chat() -> Tuple[Any, int]:
     try:
         chat_id = str(uuid.uuid4())
         messages = [config.DEFAULT_SYSTEM_MESSAGE.copy()]
-        save_chat_messages(chat_id, messages)  # Guarda archivo inicial
+        save_chat_messages(chat_id, messages)
         metadata = load_metadata()
         now_iso = datetime.now(timezone.utc).isoformat()
         metadata[chat_id] = {"id": chat_id, "title": "Nuevo Chat",
                              "created_at": now_iso, "last_updated": now_iso}
-        save_metadata(metadata)  # Guarda metadata actualizada
+        save_metadata(metadata)
         app.logger.info(f"Nuevo chat creado con ID: {chat_id}")
         return jsonify({"chat_id": chat_id, "messages": messages, "title": "Nuevo Chat"}), 201
     except Exception as e:

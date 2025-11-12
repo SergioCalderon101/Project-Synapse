@@ -1,4 +1,3 @@
-/* Importación y Reset (Mantenidos) */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 * {
@@ -10,13 +9,10 @@
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background-color: #111827;
-    /* Tono oscuro base */
     color: #D1D5DB;
-    /* Color de texto principal */
     height: 100vh;
     display: flex;
     overflow: hidden;
-    /* Evitar scroll en el body */
 }
 
 /* LAYOUT PRINCIPAL */
@@ -29,11 +25,8 @@ body {
 /* --- BARRA LATERAL --- */
 .sidebar {
     width: 260px;
-    /* Un poco más ancha */
     background-color: #1F2937;
-    /* Fondo ligeramente más claro que el body */
     border-right: 1px solid #374151;
-    /* Borde sutil */
     padding: 16px;
     display: flex;
     flex-direction: column;
@@ -53,19 +46,16 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     color: #F9FAFB;
-    /* Blanco */
 }
 
 .logo span {
     color: #60A5FA;
-    /* Azul claro */
     font-weight: 500;
 }
 
 .new-chat-btn {
     background: none;
     border: 1px solid #4B5563;
-    /* Borde gris */
     color: #D1D5DB;
     padding: 8px;
     border-radius: 6px;
@@ -82,19 +72,15 @@ body {
 
 .new-chat-btn:hover {
     background-color: #374151;
-    /* Hover sutil */
     color: #F9FAFB;
 }
 
 .chat-history {
     flex-grow: 1;
-    /* Ocupa el espacio disponible */
     overflow-y: auto;
-    /* Scroll si hay muchos items */
     display: flex;
     flex-direction: column;
     gap: 4px;
-    /* Espacio entre items reducido */
 }
 
 .history-item-container {
@@ -109,7 +95,6 @@ body {
 
 .history-item-container:hover {
     background-color: #374151;
-    /* Hover en todo el item */
 }
 
 .history-item-container .history-item {
@@ -125,15 +110,11 @@ body {
     display: block;
     cursor: pointer;
     border-radius: 6px 0 0 6px;
-    /* Redondeo solo a la izquierda si es necesario */
 }
 
 .history-item-container .history-item.active {
     font-weight: 600;
     color: #F9FAFB;
-    /* Hacer el texto activo más blanco */
-    /* Podrías añadir un fondo diferente aquí si no usas hover en container */
-    /* background-color: rgba(96, 165, 250, 0.1); */
 }
 
 .delete-chat-btn {
@@ -150,11 +131,9 @@ body {
     margin-left: 5px;
     flex-shrink: 0;
     height: 100%;
-    /* Para alinear verticalmente si es necesario */
     display: flex;
     align-items: center;
     border-radius: 0 6px 6px 0;
-    /* Redondeo a la derecha */
 }
 
 .history-item-container:hover .delete-chat-btn {
@@ -176,13 +155,10 @@ body {
 .sidebar-footer {
     padding-top: 16px;
     margin-top: auto;
-    /* Empuja al fondo */
     border-top: 1px solid #374151;
-    /* ---> AQUI CAMBIO <--- : Usar Flexbox para alinear items del footer */
     display: flex;
     flex-direction: column;
     gap: 15px;
-    /* Espacio entre botón y sección de ajustes */
 }
 
 .sidebar-action {
@@ -199,7 +175,6 @@ body {
     text-align: left;
     font-size: 0.9rem;
     transition: background-color 0.2s ease;
-    /* Quitar márgenes si usamos gap en el footer */
     margin: 0;
 }
 
@@ -351,9 +326,7 @@ body {
     border: 1px solid #4B5563;
     border-radius: 8px;
     background-color: #1F2937;
-    /* Fondo input - CONSISTENTE */
     color: #F9FAFB;
-    /* Texto blanco - CONSISTENTE */
     font-size: 1rem;
     line-height: 1.5;
     resize: none;
@@ -395,7 +368,6 @@ body {
 }
 
 /* --- SCROLLBAR --- */
-/* (Tus estilos de scrollbar - sin cambios) */
 .chat-messages::-webkit-scrollbar,
 .chat-history::-webkit-scrollbar,
 #user-input::-webkit-scrollbar {
@@ -422,7 +394,6 @@ body {
 }
 
 /* --- ANIMACIONES --- */
-/* (Tus animaciones - sin cambios) */
 @keyframes fadeIn {
     from {
         opacity: 0;
