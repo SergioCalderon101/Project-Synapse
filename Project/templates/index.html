@@ -23,18 +23,68 @@
             </nav>
 
             <div class="sidebar-footer">
-                <button class="sidebar-action">
+                <button class="sidebar-action settings-toggle-btn" id="settings-toggle">
                     <i class='bx bx-cog'></i> Ajustes
+                    <i class='bx bx-chevron-down settings-chevron'></i>
                 </button>
 
-                <div class="settings-section">
-                    <label for="modelo-selector">Modelo AI:</label>
-                    <select id="modelo-selector" name="modelo">
-                        <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo (Rápido)</option>
-                        <option value="gpt-4o">GPT-4o (Último)</option>
-                        <option value="gpt-4">GPT-4 (Potente)</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini (Eficiente)</option>
-                    </select>
+                <div class="settings-panel" id="settings-panel">
+                    <div class="settings-section">
+                        <label class="settings-label">
+                            <i class='bx bx-brain'></i>
+                            Modelo AI
+                        </label>
+                        <div class="model-grid">
+                            <div class="model-option" data-model="gpt-3.5-turbo">
+                                <div class="model-radio">
+                                    <input type="radio" name="modelo" value="gpt-3.5-turbo" id="model-gpt35" checked>
+                                    <span class="radio-custom"></span>
+                                </div>
+                                <div class="model-info">
+                                    <div class="model-name">GPT-3.5 Turbo</div>
+                                    <div class="model-desc">Rápido y eficiente</div>
+                                </div>
+                            </div>
+
+                            <div class="model-option" data-model="gpt-4o-mini">
+                                <div class="model-radio">
+                                    <input type="radio" name="modelo" value="gpt-4o-mini" id="model-gpt4mini">
+                                    <span class="radio-custom"></span>
+                                </div>
+                                <div class="model-info">
+                                    <div class="model-name">GPT-4o Mini</div>
+                                    <div class="model-desc">Equilibrado y económico</div>
+                                </div>
+                            </div>
+
+                            <div class="model-option" data-model="gpt-4o">
+                                <div class="model-radio">
+                                    <input type="radio" name="modelo" value="gpt-4o" id="model-gpt4o">
+                                    <span class="radio-custom"></span>
+                                </div>
+                                <div class="model-info">
+                                    <div class="model-name">GPT-4o</div>
+                                    <div class="model-desc">Más reciente</div>
+                                </div>
+                            </div>
+
+                            <div class="model-option" data-model="gpt-4">
+                                <div class="model-radio">
+                                    <input type="radio" name="modelo" value="gpt-4" id="model-gpt4">
+                                    <span class="radio-custom"></span>
+                                </div>
+                                <div class="model-info">
+                                    <div class="model-name">GPT-4</div>
+                                    <div class="model-desc">Máxima potencia</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="current-model-indicator">
+                            <i class='bx bx-check-circle'></i>
+                            <span id="current-model-text">GPT-3.5 Turbo</span> en uso
+                        </div>
+                    </div>
                 </div>
             </div>
         </aside>

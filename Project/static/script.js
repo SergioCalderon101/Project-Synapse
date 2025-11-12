@@ -8,13 +8,19 @@ document.addEventListener("DOMContentLoaded", () => {
         welcomeMessage: document.getElementById("welcome-message"),
         newChatButton: document.querySelector(".new-chat-btn"),
         chatHistoryNav: document.querySelector(".chat-history"),
-        modelSelector: document.getElementById("modelo-selector")
+        settingsToggle: document.getElementById("settings-toggle"),
+        settingsPanel: document.getElementById("settings-panel"),
+        currentModelText: document.getElementById("current-model-text"),
+        modelOptions: document.querySelectorAll('.model-option'),
+        modelRadios: document.querySelectorAll('input[name="modelo"]')
     };
 
     // --- Estado App ---
     let state = {
         currentChatId: null,
-        isLoading: false
+        isLoading: false,
+        selectedModel: localStorage.getItem('selectedModel') || 'gpt-3.5-turbo',
+        settingsOpen: false
     };
 
     // --- Funciones UI ---
@@ -72,6 +78,41 @@ document.addEventListener("DOMContentLoaded", () => {
         adjustTextareaHeight() {
             elements.userInput.style.height = 'auto';
             elements.userInput.style.height = (elements.userInput.scrollHeight) + 'px';
+        },
+
+        toggleSettings() {
+            state.settingsOpen = !state.settingsOpen;
+
+            if (state.settingsOpen) {
+                elements.settingsPanel.classList.add('open');
+                elements.settingsToggle.classList.add('active');
+            } else {
+                elements.settingsPanel.classList.remove('open');
+                elements.settingsToggle.classList.remove('active');
+            }
+        },
+
+        updateModelDisplay() {
+            const modelNames = {
+                'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+                'gpt-4o-mini': 'GPT-4o Mini',
+                'gpt-4o': 'GPT-4o',
+                'gpt-4': 'GPT-4'
+            };
+
+            elements.currentModelText.textContent = modelNames[state.selectedModel] || state.selectedModel;
+        },
+
+        initializeModelSelection() {
+            // Cargar modelo guardado
+            const savedModel = state.selectedModel;
+            const radioToCheck = document.querySelector(`input[name="modelo"][value="${savedModel}"]`);
+
+            if (radioToCheck) {
+                radioToCheck.checked = true;
+            }
+
+            this.updateModelDisplay();
         }
     };
 
@@ -276,7 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            const selectedModel = elements.modelSelector?.value || null;
+            const selectedModel = state.selectedModel;
 
             UI.setLoadingState(true);
             const currentText = messageText;
@@ -340,8 +381,39 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.newChatButton.addEventListener("click", () => Chat.startNew());
     }
 
+    // Settings toggle
+    if (elements.settingsToggle) {
+        elements.settingsToggle.addEventListener("click", () => UI.toggleSettings());
+    }
+
+    // Model selection
+    elements.modelOptions.forEach(option => {
+        option.addEventListener('click', function () {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                state.selectedModel = radio.value;
+                localStorage.setItem('selectedModel', radio.value);
+                UI.updateModelDisplay();
+            }
+        });
+    });
+
+    elements.modelRadios.forEach(radio => {
+        radio.addEventListener('change', function () {
+            if (this.checked) {
+                state.selectedModel = this.value;
+                localStorage.setItem('selectedModel', this.value);
+                UI.updateModelDisplay();
+            }
+        });
+    });
+
     // --- Inicialización ---
     async function initializeApp() {
+        // Inicializar selección de modelo
+        UI.initializeModelSelection();
+
         const initialHistory = await History.loadList();
         const mostRecentChatLink = elements.chatHistoryNav.querySelector('.history-item');
 

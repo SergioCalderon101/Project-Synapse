@@ -156,3 +156,17 @@
 2025-11-12 10:47:34,183 - app - INFO - Thread-20 (process_request_thread) - DELETE /chat/d2d619b9-5c0b-4206-96ca-44b0b5df4aac
 2025-11-12 10:47:34,188 - app - INFO - Thread-20 (process_request_thread) - Metadata eliminada: d2d619b9-5c0b-4206-96ca-44b0b5df4aac
 2025-11-12 10:47:34,189 - app - INFO - Thread-20 (process_request_thread) - Archivo eliminado: chats\d2d619b9-5c0b-4206-96ca-44b0b5df4aac.json
+2025-11-12 14:52:44,265 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-12 14:52:44,268 - app - INFO - MainThread - 'templates' creado.
+2025-11-12 14:52:44,270 - app - INFO - MainThread - 'static' creado.
+2025-11-12 14:52:45,977 - app - INFO - MainThread - Cliente OpenAI inicializado.
+2025-11-12 14:53:23,920 - app - INFO - Thread-7 (process_request_thread) - Nuevo chat creado con ID: 3a09951f-c568-44ee-986f-1774b378c163
+2025-11-12 14:53:27,732 - app - INFO - Thread-9 (process_request_thread) - DELETE /chat/2bbca7d8-8bd4-4b88-aa1d-1743a62410c4
+2025-11-12 14:53:27,737 - app - INFO - Thread-9 (process_request_thread) - Metadata eliminada: 2bbca7d8-8bd4-4b88-aa1d-1743a62410c4
+2025-11-12 14:53:27,742 - app - INFO - Thread-9 (process_request_thread) - Archivo eliminado: chats\2bbca7d8-8bd4-4b88-aa1d-1743a62410c4.json
+2025-11-12 15:03:58,110 - app - INFO - Thread-29 (process_request_thread) - DELETE /chat/3a09951f-c568-44ee-986f-1774b378c163
+2025-11-12 15:03:58,115 - app - INFO - Thread-29 (process_request_thread) - Metadata eliminada: 3a09951f-c568-44ee-986f-1774b378c163
+2025-11-12 15:03:58,116 - app - INFO - Thread-29 (process_request_thread) - Archivo eliminado: chats\3a09951f-c568-44ee-986f-1774b378c163.json
+2025-11-12 15:04:00,937 - app - INFO - Thread-31 (process_request_thread) - Nuevo chat creado con ID: bc2b3716-f3dd-4b42-bfb1-5ab258ab7c42
+2025-11-12 15:04:01,514 - app - INFO - Thread-33 (process_request_thread) - Procesando mensaje para chat bc2b3716-f3dd-4b42-bfb1-5ab258ab7c42 usando modelo: gpt-3.5-turbo
+2025-11-12 15:04:02,833 - app - INFO - Thread-33 (process_request_thread) - Respuesta enviada exitosamente para chat bc2b3716-f3dd-4b42-bfb1-5ab258ab7c42 (Modelo: gpt-3.5-turbo).

@@ -488,59 +488,210 @@ body {
     gap: 8px;
 }
 
-/* --- ESTILOS PARA SECCIÓN DE AJUSTES DEL MODELO (Refinados) --- */
+/* --- ESTILOS PARA SECCIÓN DE AJUSTES (MEJORADOS) --- */
 
-.sidebar-footer .settings-section {
-    /* Quitar margen si el footer usa gap */
-    margin-top: 0;
-    /* Mantener padding lateral consistente con el botón de ajustes si tiene 12px */
-    padding: 0 12px;
+.sidebar-footer {
+    padding-top: 16px;
+    margin-top: auto;
+    border-top: 1px solid #374151;
+    display: flex;
+    flex-direction: column;
 }
 
-.settings-section label[for="modelo-selector"] {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 0.85em;
-    color: #adb5bd;
-    /* Mantenido gris claro */
-    font-weight: 500;
-}
-
-#modelo-selector {
-    width: 100%;
-    padding: 8px 10px;
-    /* Reducir padding vertical un poco? Ajusta */
-    /* ---> AQUI CAMBIO <--- : Usar colores consistentes con #user-input */
-    background-color: #1F2937;
-    /* Igual que input */
-    color: #F9FAFB;
-    /* Igual que input */
-    border: 1px solid #4B5563;
-    /* Igual que input */
+.settings-toggle-btn {
+    background: none;
+    border: none;
+    color: #D1D5DB;
+    padding: 10px 12px;
     border-radius: 6px;
-    /* Igual que botones/items */
-    font-size: 0.9em;
     cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    /* Flecha personalizada (mantenida) */
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ADB5BD%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 10px 10px;
-    padding-right: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-align: left;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+    margin: 0;
 }
 
-#modelo-selector:hover {
-    border-color: #6B7280;
-    /* Borde gris más claro en hover (consistente?) */
+.settings-toggle-btn:hover {
+    background-color: #374151;
 }
 
-#modelo-selector:focus {
-    outline: none;
+.settings-toggle-btn .settings-chevron {
+    transition: transform 0.3s ease;
+    font-size: 1.2rem;
+    margin-left: auto;
+}
+
+.settings-toggle-btn.active .settings-chevron {
+    transform: rotate(180deg);
+}
+
+.settings-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+
+.settings-panel.open {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 12px;
+}
+
+.settings-section {
+    padding: 0;
+}
+
+.settings-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: #9CA3AF;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.settings-label i {
+    font-size: 1.1rem;
+    color: #60A5FA;
+}
+
+.model-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.model-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background-color: #1F2937;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.model-option:hover {
+    background-color: #2D3748;
+    border-color: #4B5563;
+}
+
+.model-option:has(input:checked) {
+    background-color: rgba(96, 165, 250, 0.1);
     border-color: #60A5FA;
-    /* Borde azul (consistente con input) */
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.3);
-    /* Sombra suave (ajusta si quieres) */
+}
+
+.model-radio {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.model-radio input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-custom {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #4B5563;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.model-radio input:checked+.radio-custom {
+    border-color: #60A5FA;
+    background-color: #60A5FA;
+}
+
+.model-radio input:checked+.radio-custom::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.model-info {
+    flex: 1;
+}
+
+.model-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #E5E7EB;
+    margin-bottom: 2px;
+}
+
+.model-desc {
+    font-size: 0.75rem;
+    color: #9CA3AF;
+}
+
+.current-model-indicator {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background-color: rgba(16, 185, 129, 0.1);
+    border-left: 3px solid #10B981;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #10B981;
+}
+
+.current-model-indicator i {
+    font-size: 1.1rem;
+}
+
+#current-model-text {
+    font-weight: 600;
+    color: #D1D5DB;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 220px;
+    }
+
+    .model-name {
+        font-size: 0.85rem;
+    }
+
+    .model-desc {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        position: absolute;
+        left: -260px;
+        z-index: 100;
+        transition: left 0.3s ease;
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
 }
