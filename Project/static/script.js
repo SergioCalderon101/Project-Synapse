@@ -1,4 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Configurar Marked.js
+    marked.setOptions({
+        highlight: function (code, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    return hljs.highlight(code, { language: lang }).value;
+                } catch (e) {
+                    console.error('Error highlighting code:', e);
+                }
+            }
+            return hljs.highlightAuto(code).value;
+        },
+        breaks: true,
+        gfm: true
+    });
+
     const elements = {
         userInput: document.getElementById("user-input"),
         sendButton: document.getElementById("send-btn"),
@@ -10,14 +26,20 @@ document.addEventListener("DOMContentLoaded", () => {
         settingsPanel: document.getElementById("settings-panel"),
         currentModelText: document.getElementById("current-model-text"),
         modelOptions: document.querySelectorAll('.model-option'),
-        modelRadios: document.querySelectorAll('input[name="modelo"]')
+        modelRadios: document.querySelectorAll('input[name="modelo"]'),
+        deleteModal: document.getElementById("delete-modal"),
+        modalTitle: document.getElementById("modal-chat-title"),
+        modalCancel: document.getElementById("modal-cancel"),
+        modalConfirm: document.getElementById("modal-confirm"),
+        loadingOverlay: document.getElementById("loading-overlay")
     };
 
     let state = {
         currentChatId: null,
         isLoading: false,
         selectedModel: localStorage.getItem('selectedModel') || 'gpt-3.5-turbo',
-        settingsOpen: false
+        settingsOpen: false,
+        pendingDelete: null
     };
 
     const UI = {
@@ -28,20 +50,57 @@ document.addEventListener("DOMContentLoaded", () => {
             const messageContentDiv = document.createElement("div");
             messageContentDiv.className = "message-content";
 
-            if (isHTML) {
+            if (type === "bot" && !isHTML) {
+                // Renderizar markdown para mensajes del bot
+                try {
+                    const htmlContent = marked.parse(content);
+                    messageContentDiv.innerHTML = htmlContent;
+                    // Aplicar syntax highlighting a bloques de código
+                    messageContentDiv.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
+                } catch (e) {
+                    console.error('Error parsing markdown:', e);
+                    messageContentDiv.textContent = content;
+                }
+            } else if (isHTML) {
                 messageContentDiv.innerHTML = content;
             } else {
                 messageContentDiv.textContent = content;
             }
 
             if (type === "error") {
-                const errorLabel = document.createElement("strong");
-                errorLabel.textContent = "Error: ";
-                messageContentDiv.prepend(errorLabel);
+                const errorIcon = document.createElement("i");
+                errorIcon.className = 'bx bx-error-circle';
+                messageContentDiv.prepend(errorIcon);
             }
 
             messageWrapper.appendChild(messageContentDiv);
             return messageWrapper;
+        },
+
+        showTypingIndicator() {
+            const typingDiv = document.createElement("div");
+            typingDiv.className = "message bot-message typing-indicator";
+            typingDiv.id = "typing-indicator";
+            typingDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            elements.chatLog.appendChild(typingDiv);
+            elements.chatLog.scrollTop = elements.chatLog.scrollHeight;
+        },
+
+        removeTypingIndicator() {
+            const indicator = document.getElementById("typing-indicator");
+            if (indicator) {
+                indicator.remove();
+            }
         },
 
         clearChatLog() {
@@ -59,16 +118,59 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             const messageElement = this.createMessageElement(type, content, isHTML);
             elements.chatLog.appendChild(messageElement);
-            elements.chatLog.scrollTop = elements.chatLog.scrollHeight;
+
+            // Animación de entrada
+            setTimeout(() => {
+                messageElement.classList.add('message-visible');
+            }, 10);
+
+            this.scrollToBottom();
+        },
+
+        scrollToBottom(smooth = true) {
+            elements.chatLog.scrollTo({
+                top: elements.chatLog.scrollHeight,
+                behavior: smooth ? 'smooth' : 'auto'
+            });
         },
 
         setLoadingState(loading) {
             state.isLoading = loading;
             elements.userInput.disabled = loading;
             elements.sendButton.disabled = loading;
-            if (!loading) {
+
+            if (loading) {
+                elements.sendButton.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
+            } else {
+                elements.sendButton.innerHTML = "<i class='bx bxs-send'></i>";
                 elements.userInput.focus();
             }
+        },
+
+        showLoadingOverlay(show, message = 'Procesando...') {
+            if (show) {
+                elements.loadingOverlay.querySelector('p').textContent = message;
+                elements.loadingOverlay.classList.add('active');
+            } else {
+                elements.loadingOverlay.classList.remove('active');
+            }
+        },
+
+        showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class='bx ${type === 'success' ? 'bx-check-circle' : type === 'error' ? 'bx-error-circle' : 'bx-info-circle'}'></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('toast-visible'), 10);
+
+            setTimeout(() => {
+                toast.classList.remove('toast-visible');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         },
 
         adjustTextareaHeight() {
@@ -86,6 +188,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 elements.settingsPanel.classList.remove('open');
                 elements.settingsToggle.classList.remove('active');
             }
+        },
+
+        showDeleteModal(chatId, chatTitle) {
+            state.pendingDelete = { chatId, chatTitle };
+            elements.modalTitle.textContent = chatTitle;
+            elements.deleteModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        },
+
+        hideDeleteModal() {
+            elements.deleteModal.classList.remove('active');
+            document.body.style.overflow = '';
+            state.pendingDelete = null;
         },
 
         updateModelDisplay() {
@@ -181,9 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
             deleteButton.addEventListener("click", async (e) => {
                 e.stopPropagation();
                 if (state.isLoading) return;
-                if (confirm(`¿Estás seguro de que quieres borrar el chat "${link.textContent}"?`)) {
-                    await this.delete(chat.id, itemContainer);
-                }
+                UI.showDeleteModal(chat.id, link.textContent);
             });
 
             itemContainer.appendChild(link);
@@ -195,6 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (state.isLoading) return;
 
             UI.setLoadingState(true);
+            UI.showLoadingOverlay(true, 'Eliminando chat...');
 
             try {
                 const response = await fetch(`/chat/${chatId}`, { method: 'DELETE' });
@@ -208,6 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 itemElement.remove();
+                UI.showToast('Chat eliminado correctamente', 'success');
 
                 if (state.currentChatId === chatId) {
                     state.currentChatId = null;
@@ -229,9 +344,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             } catch (error) {
                 console.error("Error borrando chat:", error);
-                alert(`No se pudo borrar el chat: ${error.message}`);
+                UI.showToast(`No se pudo borrar: ${error.message}`, 'error');
             } finally {
                 UI.setLoadingState(false);
+                UI.showLoadingOverlay(false);
             }
         }
     };
@@ -266,6 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (state.isLoading) return;
 
             UI.setLoadingState(true);
+            UI.showLoadingOverlay(true, 'Cargando chat...');
             UI.clearChatLog();
 
             try {
@@ -278,16 +395,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.messages && data.messages.length > 0) {
                     data.messages.forEach(msg => {
                         if (msg.role !== 'system') {
-                            UI.addMessageToLog(msg.role === 'user' ? 'usuario' : 'bot', msg.content, true);
+                            UI.addMessageToLog(msg.role === 'user' ? 'usuario' : 'bot', msg.content, false);
                         }
                     });
                 }
+                UI.scrollToBottom(false);
             } catch (error) {
                 console.error("Error cargando chat:", error);
-                UI.addMessageToLog("error", `No se pudo cargar chat: ${error.message}`);
+                UI.showToast(`Error al cargar chat: ${error.message}`, 'error');
                 state.currentChatId = null;
             } finally {
                 UI.setLoadingState(false);
+                UI.showLoadingOverlay(false);
                 document.querySelectorAll('.history-item.active').forEach(el => el.classList.remove('active'));
                 const activeLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${state.currentChatId}"]`);
                 if (activeLink) activeLink.classList.add('active');
@@ -317,6 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
             elements.userInput.style.height = 'auto';
 
             UI.addMessageToLog("usuario", currentText, false);
+            UI.showTypingIndicator();
 
             try {
                 const requestBody = { mensaje: currentText };
@@ -343,13 +463,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 const data = await response.json();
-                UI.addMessageToLog("bot", data.respuesta || "No se recibió respuesta.", true);
+
+                UI.removeTypingIndicator();
+                UI.addMessageToLog("bot", data.respuesta || "No se recibió respuesta.", false);
 
                 await History.loadList();
 
             } catch (error) {
                 console.error("Error en sendMessage:", error);
-                UI.addMessageToLog("error", error.message || "Error de conexión.");
+                UI.removeTypingIndicator();
+                UI.showToast(error.message || "Error de conexión", 'error');
             } finally {
                 UI.setLoadingState(false);
                 UI.adjustTextareaHeight();
@@ -376,6 +499,43 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.settingsToggle) {
         elements.settingsToggle.addEventListener("click", () => UI.toggleSettings());
     }
+
+    // Modal events
+    elements.modalCancel.addEventListener('click', () => {
+        UI.hideDeleteModal();
+    });
+
+    elements.modalConfirm.addEventListener('click', async () => {
+        if (!state.pendingDelete) {
+            console.warn('No hay chat pendiente para eliminar');
+            return;
+        }
+
+        // Prevenir múltiples clics
+        if (state.isLoading) return;
+
+        const { chatId } = state.pendingDelete;
+        UI.hideDeleteModal();
+
+        const itemElement = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${chatId}"]`)?.parentElement;
+        if (itemElement) {
+            await History.delete(chatId, itemElement);
+        }
+    });
+
+    // Cerrar modal al hacer click fuera
+    elements.deleteModal.addEventListener('click', (e) => {
+        if (e.target === elements.deleteModal) {
+            UI.hideDeleteModal();
+        }
+    });
+
+    // Cerrar modal con ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && elements.deleteModal.classList.contains('active')) {
+            UI.hideDeleteModal();
+        }
+    });
 
     // Model selection
     elements.modelOptions.forEach(option => {

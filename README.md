@@ -10,6 +10,10 @@ Aplicación web de chat conversacional que integra modelos de IA de OpenAI (GPT-
 - Selección de modelos GPT
 - Títulos automáticos generados por IA
 - Gestión de contexto (últimos 12 mensajes)
+- **Renderizado Markdown** con syntax highlighting
+- **Modales profesionales** para confirmaciones
+- **Indicadores de progreso** y typing indicators
+- **Notificaciones toast** para feedback en tiempo real
 
 ## 📁 Estructura del Proyecto
 
@@ -35,8 +39,9 @@ chat_app/
 
 ### **Stack Tecnológico**
 - **Backend:** Python, Flask 3.0
-- **Frontend:** JavaScript, HTML5, CSS3
+- **Frontend:** JavaScript (Vanilla), HTML5, CSS3
 - **IA:** OpenAI API (GPT-3.5/4/4o)
+- **Renderizado:** Marked.js (Markdown), Highlight.js (Syntax highlighting)
 - **Almacenamiento:** JSON (file-based)
 - **Dependencias:** flask-cors, python-dotenv, filelock
 
