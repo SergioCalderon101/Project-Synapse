@@ -1,6 +1,6 @@
 # 🤖 Synapse AI - Chat Web Inteligente
 
-## 📝 Descripción
+## Descripción
 
 Aplicación web de chat conversacional que integra modelos de IA de OpenAI (GPT-3.5, GPT-4, GPT-4o) mediante una interfaz. Permite crear múltiples conversaciones, cambiar entre modelos, y mantiene historial persistente con generación automática de títulos.
 
@@ -35,7 +35,7 @@ chat_app/
     └── app.log             # Logs (rotativo, 10MB)
 ```
 
-## 🛠️ Tecnologías y Métodos
+##  Tecnologías y Métodos
 
 ### **Stack Tecnológico**
 - **Backend:** Python, Flask 3.0
@@ -51,14 +51,7 @@ chat_app/
 - **Diseño:** MVC simplificado
 - **Persistencia:** File-based storage
 
-### **Metodologías**
-- **Concurrencia:** FileLock (thread-safe)
-- **Logging:** RotatingFileHandler (5 backups)
-- **Seguridad:** Variables de entorno, validación de entrada
-- **Context Management:** Ventana deslizante (12 mensajes)
-- **Error Handling:** Try-except completo en todas las rutas
-
-## 🚀 Instalación Rápida
+## Instalación 
 
 ```bash
 # 1. Clonar repositorio
