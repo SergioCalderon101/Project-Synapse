@@ -98,19 +98,25 @@ app.logger.addHandler(stream_handler)
 app.logger.setLevel(getattr(logging, config.LOG_LEVEL, logging.INFO))
 app.logger.propagate = False
 
-# Cliente OpenAI
+# Cliente OpenAI - Solo inicializar en el proceso principal (no en el reloader)
 client: Optional[OpenAI] = None
-if config.OPENAI_API_KEY:
-    try:
-        client = OpenAI(api_key=config.OPENAI_API_KEY)
-        app.logger.info("Cliente OpenAI inicializado.")
-        app.logger.debug(
-            f"Modelo Chat (Default): {config.OPENAI_CHAT_MODEL}, Modelo Título: {config.OPENAI_TITLE_MODEL}")
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.exception(f"Error fatal inicializando OpenAI: {e}")
+if os.environ.get('WERKZEUG_RUN_MAIN') != 'true' or not config.FLASK_DEBUG:
+    # Solo inicializar en el primer proceso o cuando debug esté desactivado
+    if config.OPENAI_API_KEY:
+        try:
+            client = OpenAI(api_key=config.OPENAI_API_KEY)
+            app.logger.info("Cliente OpenAI inicializado.")
+            app.logger.debug(
+                f"Modelo Chat (Default): {config.OPENAI_CHAT_MODEL}, Modelo Título: {config.OPENAI_TITLE_MODEL}")
+        except Exception as e:  # pylint: disable=broad-except
+            app.logger.exception(f"Error fatal inicializando OpenAI: {e}")
+    else:
+        app.logger.warning(
+            "OPENAI_APIKEY no encontrada en variables de entorno. Funcionalidad AI deshabilitada.")
 else:
-    app.logger.warning(
-        "OPENAI_APIKEY no encontrada en variables de entorno. Funcionalidad AI deshabilitada.")
+    # En el proceso hijo del reloader, reinicializar el cliente
+    if config.OPENAI_API_KEY:
+        client = OpenAI(api_key=config.OPENAI_API_KEY)
 
 # Funciones auxiliares
 
@@ -300,7 +306,7 @@ def _call_openai_api(messages_for_api: List[Dict[str, str]], model_to_use: str, 
 
     except APIError as e:
         app.logger.error(
-            f"Error de API OpenAI ({purpose}, modelo: {model_to_use}): {e.status_code} - {e.message}")
+            f"Error de API OpenAI ({purpose}, modelo: {model_to_use}): {str(e)}")
         return None
     except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(
