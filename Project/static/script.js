@@ -1,7 +1,25 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Configuración de constantes
+    const CONFIG = {
+        DEFAULT_MODEL: 'gpt-3.5-turbo',
+        STORAGE_KEY: 'selectedModel',
+        MESSAGE_TYPES: {
+            USER: 'usuario',
+            BOT: 'bot',
+            ERROR: 'error'
+        },
+        TOAST_DURATION: 3000,
+        MODEL_NAMES: {
+            'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+            'gpt-4o-mini': 'GPT-4o Mini',
+            'gpt-4o': 'GPT-4o',
+            'gpt-4': 'GPT-4'
+        }
+    };
+
     // Configurar Marked.js
     marked.setOptions({
-        highlight: function (code, lang) {
+        highlight: (code, lang) => {
             if (lang && hljs.getLanguage(lang)) {
                 try {
                     return hljs.highlight(code, { language: lang }).value;
@@ -15,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
         gfm: true
     });
 
+    // Cache de elementos DOM
     const elements = {
         userInput: document.getElementById("user-input"),
         sendButton: document.getElementById("send-btn"),
@@ -34,42 +53,56 @@ document.addEventListener("DOMContentLoaded", () => {
         loadingOverlay: document.getElementById("loading-overlay")
     };
 
-    let state = {
+    // Estado de la aplicación
+    const state = {
         currentChatId: null,
         isLoading: false,
-        selectedModel: localStorage.getItem('selectedModel') || 'gpt-3.5-turbo',
+        selectedModel: localStorage.getItem(CONFIG.STORAGE_KEY) || CONFIG.DEFAULT_MODEL,
         settingsOpen: false,
         pendingDelete: null
     };
 
     const UI = {
+        getMessageClass(type) {
+            const classes = {
+                [CONFIG.MESSAGE_TYPES.USER]: 'user-message',
+                [CONFIG.MESSAGE_TYPES.BOT]: 'bot-message',
+                [CONFIG.MESSAGE_TYPES.ERROR]: 'error-message'
+            };
+            return classes[type] || 'message';
+        },
+
+        renderBotContent(content) {
+            try {
+                const htmlContent = marked.parse(content);
+                return { html: htmlContent, isRendered: true };
+            } catch (e) {
+                console.error('Error parsing markdown:', e);
+                return { html: content, isRendered: false };
+            }
+        },
+
         createMessageElement(type, content, isHTML = false) {
             const messageWrapper = document.createElement("div");
-            messageWrapper.className = `message ${type === "usuario" ? "user-message" : type === "bot" ? "bot-message" : "error-message"}`;
+            messageWrapper.className = `message ${this.getMessageClass(type)}`;
 
             const messageContentDiv = document.createElement("div");
             messageContentDiv.className = "message-content";
 
-            if (type === "bot" && !isHTML) {
-                // Renderizar markdown para mensajes del bot
-                try {
-                    const htmlContent = marked.parse(content);
-                    messageContentDiv.innerHTML = htmlContent;
-                    // Aplicar syntax highlighting a bloques de código
-                    messageContentDiv.querySelectorAll('pre code').forEach((block) => {
+            if (type === CONFIG.MESSAGE_TYPES.BOT && !isHTML) {
+                const { html, isRendered } = this.renderBotContent(content);
+                messageContentDiv.innerHTML = html;
+                
+                if (isRendered) {
+                    messageContentDiv.querySelectorAll('pre code').forEach(block => {
                         hljs.highlightElement(block);
                     });
-                } catch (e) {
-                    console.error('Error parsing markdown:', e);
-                    messageContentDiv.textContent = content;
                 }
-            } else if (isHTML) {
-                messageContentDiv.innerHTML = content;
             } else {
-                messageContentDiv.textContent = content;
+                messageContentDiv[isHTML ? 'innerHTML' : 'textContent'] = content;
             }
 
-            if (type === "error") {
+            if (type === CONFIG.MESSAGE_TYPES.ERROR) {
                 const errorIcon = document.createElement("i");
                 errorIcon.className = 'bx bx-error-circle';
                 messageContentDiv.prepend(errorIcon);
@@ -93,36 +126,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
             elements.chatLog.appendChild(typingDiv);
-            elements.chatLog.scrollTop = elements.chatLog.scrollHeight;
+            this.scrollToBottom();
         },
 
         removeTypingIndicator() {
-            const indicator = document.getElementById("typing-indicator");
-            if (indicator) {
-                indicator.remove();
-            }
+            document.getElementById("typing-indicator")?.remove();
         },
 
         clearChatLog() {
             elements.chatLog.innerHTML = '';
-            if (elements.welcomeMessage) {
-                elements.welcomeMessage.style.display = 'flex';
-            }
+            elements.welcomeMessage?.style.setProperty('display', 'flex');
             elements.userInput.value = "";
             elements.userInput.style.height = 'auto';
         },
 
         addMessageToLog(type, content, isHTML = false) {
-            if (elements.welcomeMessage && elements.welcomeMessage.style.display !== 'none') {
+            if (elements.welcomeMessage?.style.display !== 'none') {
                 elements.welcomeMessage.style.display = 'none';
             }
+
             const messageElement = this.createMessageElement(type, content, isHTML);
             elements.chatLog.appendChild(messageElement);
 
-            // Animación de entrada
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 messageElement.classList.add('message-visible');
-            }, 10);
+            });
 
             this.scrollToBottom();
         },
@@ -156,21 +184,30 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
 
+        getToastIcon(type) {
+            const icons = {
+                success: 'bx-check-circle',
+                error: 'bx-error-circle',
+                info: 'bx-info-circle'
+            };
+            return icons[type] || icons.info;
+        },
+
         showToast(message, type = 'info') {
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
             toast.innerHTML = `
-                <i class='bx ${type === 'success' ? 'bx-check-circle' : type === 'error' ? 'bx-error-circle' : 'bx-info-circle'}'></i>
+                <i class='bx ${this.getToastIcon(type)}'></i>
                 <span>${message}</span>
             `;
             document.body.appendChild(toast);
 
-            setTimeout(() => toast.classList.add('toast-visible'), 10);
+            requestAnimationFrame(() => toast.classList.add('toast-visible'));
 
             setTimeout(() => {
                 toast.classList.remove('toast-visible');
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, CONFIG.TOAST_DURATION);
         },
 
         adjustTextareaHeight() {
@@ -204,14 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         updateModelDisplay() {
-            const modelNames = {
-                'gpt-3.5-turbo': 'GPT-3.5 Turbo',
-                'gpt-4o-mini': 'GPT-4o Mini',
-                'gpt-4o': 'GPT-4o',
-                'gpt-4': 'GPT-4'
-            };
-
-            elements.currentModelText.textContent = modelNames[state.selectedModel] || state.selectedModel;
+            elements.currentModelText.textContent = CONFIG.MODEL_NAMES[state.selectedModel] || state.selectedModel;
         },
 
         initializeModelSelection() {
@@ -264,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 elements.chatHistoryNav.appendChild(itemContainer);
 
                 if (state.currentChatId === chat.id) {
-                    itemContainer.querySelector('.history-item').classList.add('active');
+                    itemContainer.querySelector('.history-item')?.classList.add('active');
                 }
             });
         },
@@ -282,6 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
             link.addEventListener("click", async (e) => {
                 e.preventDefault();
                 if (state.isLoading || state.currentChatId === chat.id) return;
+                
                 await Chat.load(chat.id);
                 document.querySelectorAll('.history-item.active').forEach(el => el.classList.remove('active'));
                 link.classList.add('active');
@@ -293,14 +324,14 @@ document.addEventListener("DOMContentLoaded", () => {
             deleteButton.title = "Borrar este chat";
             deleteButton.dataset.chatId = chat.id;
 
-            deleteButton.addEventListener("click", async (e) => {
+            deleteButton.addEventListener("click", (e) => {
                 e.stopPropagation();
-                if (state.isLoading) return;
-                UI.showDeleteModal(chat.id, link.textContent);
+                if (!state.isLoading) {
+                    UI.showDeleteModal(chat.id, link.textContent);
+                }
             });
 
-            itemContainer.appendChild(link);
-            itemContainer.appendChild(deleteButton);
+            itemContainer.append(link, deleteButton);
             return itemContainer;
         },
 
@@ -312,42 +343,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 const response = await fetch(`/chat/${chatId}`, { method: 'DELETE' });
+                
                 if (!response.ok) {
-                    let errorMsg = `Error HTTP ${response.status}`;
-                    try {
-                        const data = await response.json();
-                        errorMsg = data.error || errorMsg;
-                    } catch (e) { }
+                    const errorMsg = await this.extractErrorMessage(response);
                     throw new Error(errorMsg);
                 }
 
                 itemElement.remove();
                 UI.showToast('Chat eliminado correctamente', 'success');
 
-                if (state.currentChatId === chatId) {
-                    state.currentChatId = null;
-                    UI.clearChatLog();
-
-                    const remainingHistory = await this.loadList();
-                    if (remainingHistory.length > 0) {
-                        const firstChatId = remainingHistory[0].id;
-                        await Chat.load(firstChatId);
-                        const firstLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${firstChatId}"]`);
-                        if (firstLink) firstLink.classList.add('active');
-                    } else {
-                        if (elements.welcomeMessage) {
-                            elements.welcomeMessage.style.display = 'flex';
-                        }
-                    }
-                } else {
-                    await this.loadList();
-                }
+                await this.handlePostDelete(chatId);
             } catch (error) {
                 console.error("Error borrando chat:", error);
                 UI.showToast(`No se pudo borrar: ${error.message}`, 'error');
             } finally {
                 UI.setLoadingState(false);
                 UI.showLoadingOverlay(false);
+            }
+        },
+
+        async extractErrorMessage(response) {
+            let errorMsg = `Error HTTP ${response.status}`;
+            try {
+                const data = await response.json();
+                errorMsg = data.error || errorMsg;
+            } catch (e) { 
+                // Si falla el parse, usa el mensaje por defecto
+            }
+            return errorMsg;
+        },
+
+        async handlePostDelete(chatId) {
+            if (state.currentChatId === chatId) {
+                state.currentChatId = null;
+                UI.clearChatLog();
+
+                const remainingHistory = await this.loadList();
+                
+                if (remainingHistory.length > 0) {
+                    const firstChatId = remainingHistory[0].id;
+                    await Chat.load(firstChatId);
+                    const firstLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${firstChatId}"]`);
+                    firstLink?.classList.add('active');
+                } else {
+                    elements.welcomeMessage?.style.setProperty('display', 'flex');
+                }
+            } else {
+                await this.loadList();
             }
         }
     };
@@ -368,10 +410,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await History.loadList();
                 const newLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${state.currentChatId}"]`);
-                if (newLink) newLink.classList.add('active');
+                newLink?.classList.add('active');
             } catch (error) {
                 console.error("Error en startNewChat:", error);
-                UI.addMessageToLog("error", `No se pudo iniciar chat: ${error.message}`);
+                UI.addMessageToLog(CONFIG.MESSAGE_TYPES.ERROR, `No se pudo iniciar chat: ${error.message}`);
                 state.currentChatId = null;
             } finally {
                 UI.setLoadingState(false);
@@ -392,13 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
                 state.currentChatId = data.chat_id;
 
-                if (data.messages && data.messages.length > 0) {
-                    data.messages.forEach(msg => {
-                        if (msg.role !== 'system') {
-                            UI.addMessageToLog(msg.role === 'user' ? 'usuario' : 'bot', msg.content, false);
-                        }
-                    });
-                }
+                this.renderMessages(data.messages);
                 UI.scrollToBottom(false);
             } catch (error) {
                 console.error("Error cargando chat:", error);
@@ -407,68 +443,49 @@ document.addEventListener("DOMContentLoaded", () => {
             } finally {
                 UI.setLoadingState(false);
                 UI.showLoadingOverlay(false);
-                document.querySelectorAll('.history-item.active').forEach(el => el.classList.remove('active'));
-                const activeLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${state.currentChatId}"]`);
-                if (activeLink) activeLink.classList.add('active');
+                this.updateActiveHistoryItem(chatId);
             }
+        },
+
+        renderMessages(messages) {
+            if (!messages || messages.length === 0) return;
+
+            messages.forEach(msg => {
+                if (msg.role !== 'system') {
+                    const messageType = msg.role === 'user' ? CONFIG.MESSAGE_TYPES.USER : CONFIG.MESSAGE_TYPES.BOT;
+                    UI.addMessageToLog(messageType, msg.content, false);
+                }
+            });
+        },
+
+        updateActiveHistoryItem(chatId) {
+            document.querySelectorAll('.history-item.active').forEach(el => el.classList.remove('active'));
+            const activeLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${chatId}"]`);
+            activeLink?.classList.add('active');
         },
 
         async sendMessage() {
             const messageText = elements.userInput.value.trim();
 
-            if (!messageText || state.isLoading) {
-                return;
-            }
+            if (!messageText || state.isLoading) return;
 
             if (!state.currentChatId) {
                 await this.startNew();
-
-                if (!state.currentChatId) {
-                    return;
-                }
+                if (!state.currentChatId) return;
             }
 
-            const selectedModel = state.selectedModel;
+            const currentText = messageText;
+            this.resetInput();
 
             UI.setLoadingState(true);
-            const currentText = messageText;
-            elements.userInput.value = "";
-            elements.userInput.style.height = 'auto';
-
-            UI.addMessageToLog("usuario", currentText, false);
+            UI.addMessageToLog(CONFIG.MESSAGE_TYPES.USER, currentText, false);
             UI.showTypingIndicator();
 
             try {
-                const requestBody = { mensaje: currentText };
-                if (selectedModel) {
-                    requestBody.modelo = selectedModel;
-                }
-
-                const response = await fetch(`/chat/${state.currentChatId}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-
-                if (!response.ok) {
-                    let errorMsg = `Error HTTP ${response.status}`;
-                    try {
-                        const data = await response.json();
-                        errorMsg = data.error || errorMsg;
-                    } catch (e) { }
-                    throw new Error(errorMsg);
-                }
-
-                const data = await response.json();
-
+                const data = await this.sendMessageRequest(currentText);
                 UI.removeTypingIndicator();
-                UI.addMessageToLog("bot", data.respuesta || "No se recibió respuesta.", false);
-
+                UI.addMessageToLog(CONFIG.MESSAGE_TYPES.BOT, data.respuesta || "No se recibió respuesta.", false);
                 await History.loadList();
-
             } catch (error) {
                 console.error("Error en sendMessage:", error);
                 UI.removeTypingIndicator();
@@ -477,103 +494,132 @@ document.addEventListener("DOMContentLoaded", () => {
                 UI.setLoadingState(false);
                 UI.adjustTextareaHeight();
             }
+        },
+
+        resetInput() {
+            elements.userInput.value = "";
+            elements.userInput.style.height = 'auto';
+        },
+
+        async sendMessageRequest(messageText) {
+            const requestBody = { 
+                mensaje: messageText,
+                ...(state.selectedModel && { modelo: state.selectedModel })
+            };
+
+            const response = await fetch(`/chat/${state.currentChatId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorMsg = await History.extractErrorMessage(response);
+                throw new Error(errorMsg);
+            }
+
+            return await response.json();
         }
     };
 
-    elements.sendButton.addEventListener("click", () => Chat.sendMessage());
+    // Event Listeners
+    const EventHandlers = {
+        setupMessageInput() {
+            elements.sendButton.addEventListener("click", () => Chat.sendMessage());
 
-    elements.userInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            Chat.sendMessage();
+            elements.userInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    Chat.sendMessage();
+                }
+            });
+
+            elements.userInput.addEventListener('input', () => UI.adjustTextareaHeight());
+        },
+
+        setupNavigation() {
+            elements.newChatButton?.addEventListener("click", () => Chat.startNew());
+            elements.settingsToggle?.addEventListener("click", () => UI.toggleSettings());
+        },
+
+        setupModal() {
+            elements.modalCancel.addEventListener('click', () => UI.hideDeleteModal());
+
+            elements.modalConfirm.addEventListener('click', async () => {
+                if (!state.pendingDelete || state.isLoading) return;
+
+                const { chatId } = state.pendingDelete;
+                UI.hideDeleteModal();
+
+                const itemElement = elements.chatHistoryNav
+                    .querySelector(`.history-item[data-chat-id="${chatId}"]`)
+                    ?.parentElement;
+                
+                if (itemElement) {
+                    await History.delete(chatId, itemElement);
+                }
+            });
+
+            elements.deleteModal.addEventListener('click', (e) => {
+                if (e.target === elements.deleteModal) {
+                    UI.hideDeleteModal();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && elements.deleteModal.classList.contains('active')) {
+                    UI.hideDeleteModal();
+                }
+            });
+        },
+
+        setupModelSelection() {
+            elements.modelOptions.forEach(option => {
+                option.addEventListener('click', function () {
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) {
+                        radio.checked = true;
+                        state.selectedModel = radio.value;
+                        localStorage.setItem(CONFIG.STORAGE_KEY, radio.value);
+                        UI.updateModelDisplay();
+                    }
+                });
+            });
+
+            elements.modelRadios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.checked) {
+                        state.selectedModel = this.value;
+                        localStorage.setItem(CONFIG.STORAGE_KEY, this.value);
+                        UI.updateModelDisplay();
+                    }
+                });
+            });
+        },
+
+        init() {
+            this.setupMessageInput();
+            this.setupNavigation();
+            this.setupModal();
+            this.setupModelSelection();
         }
-    });
+    };
 
-    elements.userInput.addEventListener('input', () => UI.adjustTextareaHeight());
-
-    if (elements.newChatButton) {
-        elements.newChatButton.addEventListener("click", () => Chat.startNew());
-    }
-
-    // Settings toggle
-    if (elements.settingsToggle) {
-        elements.settingsToggle.addEventListener("click", () => UI.toggleSettings());
-    }
-
-    // Modal events
-    elements.modalCancel.addEventListener('click', () => {
-        UI.hideDeleteModal();
-    });
-
-    elements.modalConfirm.addEventListener('click', async () => {
-        if (!state.pendingDelete) {
-            console.warn('No hay chat pendiente para eliminar');
-            return;
-        }
-
-        // Prevenir múltiples clics
-        if (state.isLoading) return;
-
-        const { chatId } = state.pendingDelete;
-        UI.hideDeleteModal();
-
-        const itemElement = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${chatId}"]`)?.parentElement;
-        if (itemElement) {
-            await History.delete(chatId, itemElement);
-        }
-    });
-
-    // Cerrar modal al hacer click fuera
-    elements.deleteModal.addEventListener('click', (e) => {
-        if (e.target === elements.deleteModal) {
-            UI.hideDeleteModal();
-        }
-    });
-
-    // Cerrar modal con ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && elements.deleteModal.classList.contains('active')) {
-            UI.hideDeleteModal();
-        }
-    });
-
-    // Model selection
-    elements.modelOptions.forEach(option => {
-        option.addEventListener('click', function () {
-            const radio = this.querySelector('input[type="radio"]');
-            if (radio) {
-                radio.checked = true;
-                state.selectedModel = radio.value;
-                localStorage.setItem('selectedModel', radio.value);
-                UI.updateModelDisplay();
-            }
-        });
-    });
-
-    elements.modelRadios.forEach(radio => {
-        radio.addEventListener('change', function () {
-            if (this.checked) {
-                state.selectedModel = this.value;
-                localStorage.setItem('selectedModel', this.value);
-                UI.updateModelDisplay();
-            }
-        });
-    });
-
+    // Inicialización de la aplicación
     async function initializeApp() {
         UI.initializeModelSelection();
+        EventHandlers.init();
 
         const initialHistory = await History.loadList();
         const mostRecentChatLink = elements.chatHistoryNav.querySelector('.history-item');
 
         if (mostRecentChatLink) {
             await Chat.load(mostRecentChatLink.dataset.chatId);
-            const activeLink = elements.chatHistoryNav.querySelector(`.history-item[data-chat-id="${state.currentChatId}"]`);
-            if (activeLink) activeLink.classList.add('active');
         } else {
-            if (elements.welcomeMessage) {
-                elements.welcomeMessage.style.display = 'flex';
-            }
+            elements.welcomeMessage?.style.setProperty('display', 'flex');
         }
     }
 

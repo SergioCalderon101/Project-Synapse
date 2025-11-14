@@ -66,307 +66,384 @@ class Config:
 config = Config()
 
 # Inicialización de Flask
-app = Flask(__name__, template_folder=config.TEMPLATES_FOLDER,
-            static_folder=config.STATIC_FOLDER)
-cors_origins = config.CORS_ORIGINS.split(
-    ',') if config.CORS_ORIGINS != "*" else "*"
-CORS(app, origins=cors_origins, supports_credentials=True)
+app = Flask(
+    __name__, 
+    template_folder=config.TEMPLATES_FOLDER,
+    static_folder=config.STATIC_FOLDER
+)
 
-if not os.path.exists(config.LOGS_FOLDER):
-    try:
-        os.makedirs(config.LOGS_FOLDER)
-    except OSError as e:
-        print(
-            f"CRITICAL: No se pudo crear la carpeta de logs '{config.LOGS_FOLDER}': {e}", file=sys.stderr)
-        sys.exit(1)
 
-log_formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(threadName)s - %(message)s')
-stream_handler = logging.StreamHandler(sys.stdout)
-stream_handler.setFormatter(log_formatter)
-try:
-    file_handler = RotatingFileHandler(
-        config.LOG_FILE, maxBytes=10*1024*1024, backupCount=5, encoding='utf-8'
+def setup_cors() -> None:
+    """Configura CORS para la aplicación."""
+    cors_origins = (
+        config.CORS_ORIGINS.split(',') 
+        if config.CORS_ORIGINS != "*" 
+        else "*"
     )
-    file_handler.setFormatter(log_formatter)
-    app.logger.addHandler(file_handler)
-except (OSError, PermissionError) as e:
-    print(
-        f"WARNING: No se pudo configurar el logging a archivo '{config.LOG_FILE}': {e}", file=sys.stderr)
+    CORS(app, origins=cors_origins, supports_credentials=True)
 
-app.logger.addHandler(stream_handler)
-app.logger.setLevel(getattr(logging, config.LOG_LEVEL, logging.INFO))
-app.logger.propagate = False
 
-# Cliente OpenAI - Solo inicializar en el proceso principal (no en el reloader)
-client: Optional[OpenAI] = None
-if os.environ.get('WERKZEUG_RUN_MAIN') != 'true' or not config.FLASK_DEBUG:
-    # Solo inicializar en el primer proceso o cuando debug esté desactivado
-    if config.OPENAI_API_KEY:
+def setup_logging() -> None:
+    """Configura el sistema de logging."""
+    # Crear carpeta de logs
+    if not os.path.exists(config.LOGS_FOLDER):
         try:
-            client = OpenAI(api_key=config.OPENAI_API_KEY)
-            app.logger.info("Cliente OpenAI inicializado.")
-            app.logger.debug(
-                f"Modelo Chat (Default): {config.OPENAI_CHAT_MODEL}, Modelo Título: {config.OPENAI_TITLE_MODEL}")
-        except Exception as e:  # pylint: disable=broad-except
-            app.logger.exception(f"Error fatal inicializando OpenAI: {e}")
-    else:
-        app.logger.warning(
-            "OPENAI_APIKEY no encontrada en variables de entorno. Funcionalidad AI deshabilitada.")
-else:
-    # En el proceso hijo del reloader, reinicializar el cliente
-    if config.OPENAI_API_KEY:
-        client = OpenAI(api_key=config.OPENAI_API_KEY)
-
-# Funciones auxiliares
-
-
-def ensure_chats_dir_exists() -> None:
-    if not os.path.exists(config.CHATS_DIR):
-        try:
-            os.makedirs(config.CHATS_DIR)
-            app.logger.info(f"Carpeta de chats '{config.CHATS_DIR}' creada.")
+            os.makedirs(config.LOGS_FOLDER)
         except OSError as e:
-            app.logger.error(
-                f"Error crítico: No se pudo crear '{config.CHATS_DIR}': {e}")
-            raise
+            print(
+                f"CRITICAL: No se pudo crear carpeta de logs '{config.LOGS_FOLDER}': {e}",
+                file=sys.stderr
+            )
+            sys.exit(1)
 
+    # Formatter
+    log_formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(threadName)s - %(message)s'
+    )
 
-def load_metadata() -> Dict[str, Dict[str, Any]]:
-    ensure_chats_dir_exists()
-    lock = FileLock(config.METADATA_LOCK_FILE)
-    metadata = {}
+    # Stream handler
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(log_formatter)
+    app.logger.addHandler(stream_handler)
+
+    # File handler
     try:
-        with lock.acquire(timeout=5):
-            if os.path.exists(config.METADATA_FILE):
-                try:
-                    with open(config.METADATA_FILE, "r", encoding="utf-8") as f:
-                        loaded_data = json.load(f)
-                    if isinstance(loaded_data, dict):
-                        metadata = loaded_data
-                    else:
-                        app.logger.warning(
-                            f"{config.METADATA_FILE} contiene datos inválidos. Reiniciando.")
-                except (IOError, json.JSONDecodeError) as e:
-                    app.logger.error(
-                        f"Error cargando o parseando {config.METADATA_FILE}: {e}. Reiniciando metadatos.")
-                except Exception as e:  # pylint: disable=broad-except
-                    app.logger.exception(
-                        f"Error inesperado cargando metadatos: {e}")
-    except TimeoutError:
-        app.logger.error(
-            f"Timeout esperando el lock para leer {config.METADATA_FILE}.")
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.exception(
-            f"Error adquiriendo lock o durante lectura de metadatos: {e}")
-    return metadata
+        file_handler = RotatingFileHandler(
+            config.LOG_FILE,
+            maxBytes=10*1024*1024,
+            backupCount=5,
+            encoding='utf-8'
+        )
+        file_handler.setFormatter(log_formatter)
+        app.logger.addHandler(file_handler)
+    except (OSError, PermissionError) as e:
+        print(
+            f"WARNING: No se pudo configurar logging a archivo '{config.LOG_FILE}': {e}",
+            file=sys.stderr
+        )
+
+    app.logger.setLevel(getattr(logging, config.LOG_LEVEL, logging.INFO))
+    app.logger.propagate = False
 
 
-def save_metadata(metadata: Dict[str, Dict[str, Any]]) -> None:
-    ensure_chats_dir_exists()
-    lock = FileLock(config.METADATA_LOCK_FILE)
+def setup_openai_client() -> Optional[OpenAI]:
+    """Configura el cliente de OpenAI."""
+    # Solo inicializar en el proceso principal (no en el reloader)
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' and config.FLASK_DEBUG:
+        # En el proceso hijo del reloader, reinicializar silenciosamente
+        if config.OPENAI_API_KEY:
+            return OpenAI(api_key=config.OPENAI_API_KEY)
+        return None
+
+    # Proceso principal
+    if not config.OPENAI_API_KEY:
+        app.logger.warning(
+            "OPENAI_APIKEY no encontrada. Funcionalidad AI deshabilitada."
+        )
+        return None
+
     try:
-        with lock.acquire(timeout=5):
+        openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+        app.logger.info("Cliente OpenAI inicializado.")
+        app.logger.debug(
+            f"Modelo Chat: {config.OPENAI_CHAT_MODEL}, "
+            f"Modelo Título: {config.OPENAI_TITLE_MODEL}"
+        )
+        return openai_client
+    except Exception as e:
+        app.logger.exception(f"Error inicializando OpenAI: {e}")
+        return None
+
+
+# Configurar aplicación
+setup_cors()
+setup_logging()
+client = setup_openai_client()
+
+# Clases auxiliares
+
+
+class FileManager:
+    """Gestor de archivos y directorios."""
+
+    @staticmethod
+    def ensure_directory_exists(directory: str) -> None:
+        """Asegura que un directorio exista, creándolo si es necesario."""
+        if not os.path.exists(directory):
             try:
-                with open(config.METADATA_FILE, "w", encoding="utf-8") as f:
-                    json.dump(metadata, f, ensure_ascii=False, indent=2)
-                app.logger.debug(
-                    f"Metadatos guardados en {config.METADATA_FILE} ({len(metadata)} chats)")
-            except IOError as e:
-                app.logger.error(
-                    f"Error de I/O guardando metadatos en {config.METADATA_FILE}: {e}")
-            except Exception as e:  # pylint: disable=broad-except
-                app.logger.exception(
-                    f"Error inesperado guardando metadatos: {e}")
-    except TimeoutError:
-        app.logger.error(
-            f"Timeout esperando el lock para guardar {config.METADATA_FILE}.")
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.exception(
-            f"Error adquiriendo lock o durante guardado de metadatos: {e}")
+                os.makedirs(directory)
+                app.logger.info(f"Directorio '{directory}' creado.")
+            except OSError as e:
+                app.logger.error(f"Error crítico: No se pudo crear '{directory}': {e}")
+                raise
+
+    @staticmethod
+    def read_json_file(file_path: str) -> Optional[Dict[str, Any]]:
+        """Lee un archivo JSON y retorna su contenido."""
+        if not os.path.exists(file_path):
+            return None
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (IOError, json.JSONDecodeError) as e:
+            app.logger.error(f"Error leyendo {file_path}: {e}")
+            return None
+
+    @staticmethod
+    def write_json_file(file_path: str, data: Any) -> bool:
+        """Escribe datos en un archivo JSON."""
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            return True
+        except IOError as e:
+            app.logger.error(f"Error escribiendo {file_path}: {e}")
+            return False
 
 
-def _apply_context_limit(messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    if len(messages) > config.MAX_CONTEXT_LENGTH:
-        system_message = [messages[0]] if messages and messages[0].get(
-            "role") == "system" else []
-        user_assistant_msgs = [
-            msg for msg in messages if msg.get("role") != "system"]
-        msgs_to_keep = config.MAX_CONTEXT_LENGTH - len(system_message)
-        if msgs_to_keep < 0:
-            msgs_to_keep = 0
+class MetadataManager:
+    """Gestor de metadata de chats con soporte de locks."""
+
+    def __init__(self):
+        self.lock = FileLock(config.METADATA_LOCK_FILE)
+
+    def load(self) -> Dict[str, Dict[str, Any]]:
+        """Carga metadata desde archivo con protección de lock."""
+        FileManager.ensure_directory_exists(config.CHATS_DIR)
+        metadata = {}
+
+        try:
+            with self.lock.acquire(timeout=5):
+                loaded_data = FileManager.read_json_file(config.METADATA_FILE)
+                
+                if loaded_data and isinstance(loaded_data, dict):
+                    metadata = loaded_data
+                elif loaded_data is not None:
+                    app.logger.warning(
+                        f"{config.METADATA_FILE} contiene datos inválidos. Reiniciando.")
+        except TimeoutError:
+            app.logger.error(f"Timeout esperando lock para leer {config.METADATA_FILE}.")
+        except Exception as e:
+            app.logger.exception(f"Error inesperado cargando metadata: {e}")
+
+        return metadata
+
+    def save(self, metadata: Dict[str, Dict[str, Any]]) -> None:
+        """Guarda metadata en archivo con protección de lock."""
+        FileManager.ensure_directory_exists(config.CHATS_DIR)
+
+        try:
+            with self.lock.acquire(timeout=5):
+                if FileManager.write_json_file(config.METADATA_FILE, metadata):
+                    app.logger.debug(
+                        f"Metadata guardada en {config.METADATA_FILE} ({len(metadata)} chats)")
+        except TimeoutError:
+            app.logger.error(f"Timeout esperando lock para guardar {config.METADATA_FILE}.")
+        except Exception as e:
+            app.logger.exception(f"Error inesperado guardando metadata: {e}")
+
+
+# Instancia global del gestor de metadata
+metadata_manager = MetadataManager()
+
+
+class ChatManager:
+    """Gestor de operaciones de chat."""
+
+    @staticmethod
+    def apply_context_limit(messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        """Aplica límite de contexto a los mensajes."""
+        if len(messages) <= config.MAX_CONTEXT_LENGTH:
+            return messages
+
+        system_message = [messages[0]] if messages and messages[0].get("role") == "system" else []
+        user_assistant_msgs = [msg for msg in messages if msg.get("role") != "system"]
+        msgs_to_keep = max(0, config.MAX_CONTEXT_LENGTH - len(system_message))
         limited_messages = system_message + user_assistant_msgs[-msgs_to_keep:]
+
         app.logger.debug(
             f"Contexto truncado de {len(messages)} a {len(limited_messages)} mensajes.")
         return limited_messages
-    return messages
 
-
-def load_chat_messages(chat_id: str) -> Optional[List[Dict[str, str]]]:
-    ensure_chats_dir_exists()
-    chat_file = os.path.join(config.CHATS_DIR, f"{chat_id}.json")
-    if not os.path.exists(chat_file):
-        app.logger.warning(f"Archivo de chat no encontrado: {chat_file}")
-        return None
-    try:
-        with open(chat_file, "r", encoding="utf-8") as f:
-            messages = json.load(f)
-        if not isinstance(messages, list) or not messages:
-            app.logger.warning(
-                f"Chat {chat_file} vacío o con formato inválido. Recreando.")
-            return [config.DEFAULT_SYSTEM_MESSAGE.copy()]
-        if messages[0].get("role") != "system":
-            app.logger.warning(
-                f"Chat {chat_id} no comenzaba con system prompt. Añadiéndolo.")
-            messages.insert(0, config.DEFAULT_SYSTEM_MESSAGE.copy())
-        else:
+    @staticmethod
+    def ensure_system_message(messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        """Asegura que los mensajes tengan el system prompt correcto."""
+        if not messages or messages[0].get("role") != "system":
+            return [config.DEFAULT_SYSTEM_MESSAGE.copy()] + (messages or [])
+        
+        if messages[0]['content'] != config.DEFAULT_SYSTEM_MESSAGE['content']:
             messages[0]['content'] = config.DEFAULT_SYSTEM_MESSAGE['content']
-        messages = _apply_context_limit(messages)
+        
+        return messages
+
+    @staticmethod
+    def get_chat_file_path(chat_id: str) -> str:
+        """Retorna la ruta del archivo de chat."""
+        return os.path.join(config.CHATS_DIR, f"{chat_id}.json")
+
+    @classmethod
+    def load_messages(cls, chat_id: str) -> Optional[List[Dict[str, str]]]:
+        """Carga mensajes de un chat desde archivo."""
+        FileManager.ensure_directory_exists(config.CHATS_DIR)
+        chat_file = cls.get_chat_file_path(chat_id)
+
+        messages = FileManager.read_json_file(chat_file)
+        
+        if messages is None:
+            app.logger.warning(f"Archivo de chat no encontrado: {chat_file}")
+            return None
+
+        if not isinstance(messages, list) or not messages:
+            app.logger.warning(f"Chat {chat_file} vacío o con formato inválido.")
+            return [config.DEFAULT_SYSTEM_MESSAGE.copy()]
+
+        messages = cls.ensure_system_message(messages)
+        messages = cls.apply_context_limit(messages)
+
         app.logger.debug(
             f"Chat {chat_id} cargado ({len(messages)} msgs después de aplicar contexto).")
         return messages
-    except (IOError, json.JSONDecodeError) as e:
-        app.logger.error(
-            f"Error cargando o parseando chat {chat_id} desde {chat_file}: {e}")
-        return None
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.exception(f"Error inesperado cargando chat {chat_id}: {e}")
-        return None
+
+    @classmethod
+    def save_messages(cls, chat_id: str, messages: List[Dict[str, str]]) -> bool:
+        """Guarda mensajes de un chat en archivo."""
+        FileManager.ensure_directory_exists(config.CHATS_DIR)
+        chat_file = cls.get_chat_file_path(chat_id)
+
+        messages = cls.ensure_system_message(messages)
+        messages_to_save = cls.apply_context_limit(messages)
+
+        if FileManager.write_json_file(chat_file, messages_to_save):
+            app.logger.debug(f"Chat {chat_id} guardado ({len(messages_to_save)} msgs).")
+            return True
+        
+        app.logger.error(f"Error guardando chat {chat_id}")
+        return False
 
 
-def save_chat_messages(chat_id: str, messages: List[Dict[str, str]]) -> None:
-    ensure_chats_dir_exists()
-    chat_file = os.path.join(config.CHATS_DIR, f"{chat_id}.json")
-    if not messages or messages[0].get("role") != "system":
-        messages = [config.DEFAULT_SYSTEM_MESSAGE.copy()] + (messages or [])
-    elif messages[0]['content'] != config.DEFAULT_SYSTEM_MESSAGE['content']:
-        messages[0]['content'] = config.DEFAULT_SYSTEM_MESSAGE['content']
-    messages_to_save = _apply_context_limit(messages)
-    try:
-        with open(chat_file, "w", encoding="utf-8") as f:
-            json.dump(messages_to_save, f, ensure_ascii=False, indent=2)
-        app.logger.debug(
-            f"Chat {chat_id} guardado en {chat_file} ({len(messages_to_save)} msgs).")
-    except IOError as e:
-        app.logger.error(f"Error guardando chat {chat_id} en {chat_file}: {e}")
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.exception(f"Error inesperado guardando chat {chat_id}: {e}")
+chat_manager = ChatManager()
 
 
-# Parámetros de API
-API_PARAMETERS = {
-    "chat": {
-        "temperature": 0.6,
-        "max_tokens": 2000,
-        "top_p": 0.9,
-        "frequency_penalty": 0.1,
-        "presence_penalty": 0.1
-    },
-    "title": {
-        "temperature": 0.3,
-        "max_tokens": 20,
-        "stop": None
-    }
-}
+class OpenAIService:
+    """Servicio para interactuar con la API de OpenAI."""
 
-
-def _get_api_parameters(purpose: str) -> Dict[str, Any]:
-    """Devuelve los parámetros específicos para cada tipo de llamada a la API."""
-    return API_PARAMETERS.get(purpose, API_PARAMETERS["chat"])
-
-
-def _call_openai_api(messages_for_api: List[Dict[str, str]], model_to_use: str, purpose: str = "chat") -> Optional[str]:
-    """Llama a la API de Chat Completions de OpenAI usando el modelo especificado."""
-    if not client:
-        app.logger.error(
-            f"Intento de llamar a OpenAI API ({purpose}) sin cliente inicializado.")
-        return None
-
-    try:
-        app.logger.debug(
-            f"Enviando {len(messages_for_api)} mensajes a OpenAI API ({purpose}, modelo: {model_to_use})...")
-
-        params = {
-            "model": model_to_use,
-            "messages": messages_for_api,
-            **_get_api_parameters(purpose)
+    API_PARAMETERS = {
+        "chat": {
+            "temperature": 0.6,
+            "max_tokens": 2000,
+            "top_p": 0.9,
+            "frequency_penalty": 0.1,
+            "presence_penalty": 0.1
+        },
+        "title": {
+            "temperature": 0.3,
+            "max_tokens": 20,
+            "stop": None
         }
+    }
 
-        response = client.chat.completions.create(**params)
+    @classmethod
+    def get_api_parameters(cls, purpose: str) -> Dict[str, Any]:
+        """Devuelve los parámetros específicos para cada tipo de llamada a la API."""
+        return cls.API_PARAMETERS.get(purpose, cls.API_PARAMETERS["chat"])
 
-        if response.choices and response.choices[0].message and response.choices[0].message.content:
-            reply = response.choices[0].message.content.strip()
+    @classmethod
+    def call_api(cls, messages: List[Dict[str, str]], model: str, purpose: str = "chat") -> Optional[str]:
+        """Llama a la API de Chat Completions de OpenAI."""
+        if not client:
+            app.logger.error(f"Cliente OpenAI no inicializado ({purpose}).")
+            return None
+
+        try:
             app.logger.debug(
-                f"Respuesta recibida de OpenAI API ({purpose}): '{reply[:100]}...'")
+                f"Enviando {len(messages)} mensajes a OpenAI ({purpose}, modelo: {model})")
+
+            params = {
+                "model": model,
+                "messages": messages,
+                **cls.get_api_parameters(purpose)
+            }
+
+            response = client.chat.completions.create(**params)
+
+            if not (response.choices and response.choices[0].message and 
+                    response.choices[0].message.content):
+                app.logger.error(f"Respuesta inválida de OpenAI ({purpose}, {model})")
+                return None
+
+            reply = response.choices[0].message.content.strip()
+            app.logger.debug(f"Respuesta recibida ({purpose}): '{reply[:100]}...'")
             return reply
-        else:
-            app.logger.error(
-                f"Respuesta inválida/vacía de OpenAI API ({purpose}, modelo: {model_to_use})")
+
+        except APIError as e:
+            app.logger.error(f"Error API OpenAI ({purpose}, {model}): {str(e)}")
+            return None
+        except Exception as e:
+            app.logger.exception(f"Error inesperado en OpenAI API ({purpose}): {e}")
             return None
 
-    except APIError as e:
-        app.logger.error(
-            f"Error de API OpenAI ({purpose}, modelo: {model_to_use}): {str(e)}")
-        return None
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.exception(
-            f"Error inesperado en llamada a OpenAI API ({purpose}, modelo: {model_to_use}): {e}")
-        return None
-
-
-def _generate_chat_title(messages: List[Dict[str, str]]) -> Optional[str]:
-    """Genera un título para la conversación usando la IA."""
-    relevant_messages = [
-        msg for msg in messages if msg["role"] in ["user", "assistant"]][-6:]
-    if not relevant_messages:
-        app.logger.warning(
-            "No hay mensajes U/A relevantes para generar título.")
-        return None
-    title_prompt_messages = [
-        {"role": "system", "content": "Eres un experto en resumir conversaciones concisamente."},
-        *relevant_messages,
-        {"role": "user",
-            "content": f"Genera un título muy corto y descriptivo (máx ~5 palabras, {config.MAX_TITLE_LENGTH} chars) para esta conversación... Responde SOLO con el título..."}
-    ]
-    generated_title = _call_openai_api(
-        title_prompt_messages, config.OPENAI_TITLE_MODEL, purpose="title")
-    if generated_title:
-        generated_title = generated_title.replace(
-            '"', '').strip()[:config.MAX_TITLE_LENGTH]
-        if len(generated_title) > 3 and not generated_title.lower().startswith("conversación sobre"):
-            app.logger.info(
-                f"Título generado por IA validado: '{generated_title}'")
-            return generated_title
-        else:
-            app.logger.warning(
-                f"Título IA ('{generated_title}') descartado (vacío/genérico/corto).")
+    @classmethod
+    def generate_title(cls, messages: List[Dict[str, str]]) -> Optional[str]:
+        """Genera un título para la conversación usando la IA."""
+        relevant_messages = [
+            msg for msg in messages if msg["role"] in ["user", "assistant"]][-6:]
+        
+        if not relevant_messages:
+            app.logger.warning("No hay mensajes relevantes para generar título.")
             return None
-    else:
-        app.logger.error("La llamada a la API para generar título falló.")
+
+        title_prompt = [
+            {"role": "system", "content": "Eres un experto en resumir conversaciones concisamente."},
+            *relevant_messages,
+            {"role": "user", 
+             "content": f"Genera un título muy corto y descriptivo (máx ~5 palabras, "
+                       f"{config.MAX_TITLE_LENGTH} chars) para esta conversación. "
+                       f"Responde SOLO con el título."}
+        ]
+
+        generated_title = cls.call_api(title_prompt, config.OPENAI_TITLE_MODEL, purpose="title")
+        
+        if not generated_title:
+            app.logger.error("Fallo al generar título.")
+            return None
+
+        # Limpiar y validar título
+        cleaned_title = generated_title.replace('"', '').strip()[:config.MAX_TITLE_LENGTH]
+        
+        if len(cleaned_title) > 3 and not cleaned_title.lower().startswith("conversación sobre"):
+            app.logger.info(f"Título generado: '{cleaned_title}'")
+            return cleaned_title
+        
+        app.logger.warning(f"Título rechazado: '{cleaned_title}' (genérico/corto)")
+        return None
+
+    @classmethod
+    def update_title_if_needed(cls, chat_id: str, messages: List[Dict[str, str]], 
+                              metadata: Dict[str, Dict[str, Any]]) -> Optional[str]:
+        """Verifica y genera título si es necesario."""
+        if chat_id not in metadata:
+            app.logger.warning(f"Metadata no encontrada para {chat_id}")
+            return None
+
+        current_title = metadata[chat_id].get("title")
+        message_count = len([m for m in messages if m["role"] != "system"])
+        min_messages = config.TITLE_GENERATION_MIN_MESSAGES - 1
+
+        if current_title == "Nuevo Chat" and message_count >= min_messages:
+            app.logger.info(f"Generando título para chat {chat_id}...")
+            new_title = cls.generate_title(messages)
+            
+            if new_title:
+                metadata[chat_id]["title"] = new_title
+                return new_title
+            
+            app.logger.warning(f"Fallo al generar título para {chat_id}")
+        
         return None
 
 
-def _update_chat_title_if_needed(chat_id: str, messages: List[Dict[str, str]], metadata: Dict[str, Dict[str, Any]]) -> Optional[str]:
-    """Verifica si se necesita generar un título y lo hace, actualizando metadata."""
-    new_title_generated = None
-    if chat_id not in metadata:
-        app.logger.warning(
-            f"Metadata no encontrada para {chat_id} al verificar/generar título.")
-        return None
-    current_title = metadata[chat_id].get("title")
-    message_count = len([m for m in messages if m["role"] != "system"])
-    min_ua_messages_for_title = config.TITLE_GENERATION_MIN_MESSAGES - 1
-    if current_title == "Nuevo Chat" and message_count >= min_ua_messages_for_title:
-        app.logger.info(f"Intentando generar título para chat {chat_id}...")
-        new_title = _generate_chat_title(messages)
-        if new_title:
-            app.logger.info(
-                f"Título generado. Actualizando metadata para {chat_id}: '{new_title}'")
-            metadata[chat_id]["title"] = new_title
-            new_title_generated = new_title
-        else:
-            app.logger.warning(f"Generación de título para {chat_id} falló.")
-    return new_title_generated
+openai_service = OpenAIService()
 
 # Rutas
 
@@ -382,124 +459,165 @@ def home() -> Any:
 
 @app.route("/new_chat", methods=["POST"])
 def new_chat() -> Tuple[Any, int]:
+    """Crea un nuevo chat."""
     try:
         chat_id = str(uuid.uuid4())
         messages = [config.DEFAULT_SYSTEM_MESSAGE.copy()]
-        save_chat_messages(chat_id, messages)
-        metadata = load_metadata()
+        
+        chat_manager.save_messages(chat_id, messages)
+        
+        metadata = metadata_manager.load()
         now_iso = datetime.now(timezone.utc).isoformat()
-        metadata[chat_id] = {"id": chat_id, "title": "Nuevo Chat",
-                             "created_at": now_iso, "last_updated": now_iso}
-        save_metadata(metadata)
-        app.logger.info(f"Nuevo chat creado con ID: {chat_id}")
-        return jsonify({"chat_id": chat_id, "messages": messages, "title": "Nuevo Chat"}), 201
-    except Exception as e:  # pylint: disable=broad-except
+        metadata[chat_id] = {
+            "id": chat_id, 
+            "title": "Nuevo Chat",
+            "created_at": now_iso, 
+            "last_updated": now_iso
+        }
+        metadata_manager.save(metadata)
+        
+        app.logger.info(f"Nuevo chat creado: {chat_id}")
+        return jsonify({
+            "chat_id": chat_id, 
+            "messages": messages, 
+            "title": "Nuevo Chat"
+        }), 201
+    except Exception as e:
         app.logger.exception(f"Error creando chat: {e}")
-        return jsonify({"error": "No se pudo crear."}), 500
+        return jsonify({"error": "No se pudo crear el chat."}), 500
 
 
 @app.route("/history", methods=["GET"])
 def get_history() -> Tuple[Any, int]:
+    """Obtiene el historial de chats."""
     try:
-        metadata = load_metadata()
-        history_list = sorted(metadata.values(), key=lambda i: i.get(
-            "last_updated", ""), reverse=True)
-        app.logger.debug(f"Historial solicitado. {len(history_list)} chats.")
+        metadata = metadata_manager.load()
+        history_list = sorted(
+            metadata.values(), 
+            key=lambda i: i.get("last_updated", ""), 
+            reverse=True
+        )
+        app.logger.debug(f"Historial solicitado: {len(history_list)} chats")
         return jsonify({"history": history_list}), 200
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.exception(f"Error historial: {e}")
-        return jsonify({"error": "Error historial."}), 500
+    except Exception as e:
+        app.logger.exception(f"Error obteniendo historial: {e}")
+        return jsonify({"error": "Error al obtener historial."}), 500
 
 
 @app.route("/chat/<chat_id>", methods=["GET"])
 def load_specific_chat(chat_id: str) -> Tuple[Any, int]:
+    """Carga un chat específico."""
     app.logger.debug(f"GET /chat/{chat_id}")
-    messages = load_chat_messages(chat_id)
+    
+    messages = chat_manager.load_messages(chat_id)
     if messages is None:
-        abort(404, description=f"Chat no encontrado: {chat_id}.")
-    metadata = load_metadata()
+        abort(404, description=f"Chat no encontrado: {chat_id}")
+    
+    metadata = metadata_manager.load()
     chat_info = metadata.get(chat_id)
-    chat_title = chat_info.get(
-        "title", f"Chat {chat_id[:8]}...") if chat_info else f"Recuperado {chat_id[:8]}..."
+    chat_title = (
+        chat_info.get("title", f"Chat {chat_id[:8]}...") 
+        if chat_info 
+        else f"Recuperado {chat_id[:8]}..."
+    )
+    
     app.logger.debug(f"Chat {chat_id} cargado. Título: {chat_title}")
-    return jsonify({"chat_id": chat_id, "messages": messages, "title": chat_title}), 200
+    return jsonify({
+        "chat_id": chat_id, 
+        "messages": messages, 
+        "title": chat_title
+    }), 200
 
 
 @app.route("/chat/<chat_id>", methods=["DELETE"])
 def delete_chat(chat_id: str) -> Tuple[Any, int]:
+    """Elimina un chat."""
     app.logger.info(f"DELETE /chat/{chat_id}")
-    chat_file = os.path.join(config.CHATS_DIR, f"{chat_id}.json")
-    metadata = load_metadata()
-    metadata_deleted, file_deleted = False, False
+    
+    chat_file = chat_manager.get_chat_file_path(chat_id)
+    metadata = metadata_manager.load()
+    
+    metadata_deleted = False
+    file_deleted = False
+    
+    # Eliminar metadata
     if chat_id in metadata:
         del metadata[chat_id]
-        save_metadata(metadata)
+        metadata_manager.save(metadata)
         metadata_deleted = True
         app.logger.info(f"Metadata eliminada: {chat_id}")
+    
+    # Eliminar archivo
     if os.path.exists(chat_file):
         try:
             os.remove(chat_file)
             file_deleted = True
             app.logger.info(f"Archivo eliminado: {chat_file}")
         except (OSError, PermissionError) as e:
-            app.logger.error(f"Error eliminando {chat_file}: {e}")
+            app.logger.error(f"Error eliminando archivo {chat_file}: {e}")
             return jsonify({"error": "Error eliminando archivo."}), 500
+    
     if metadata_deleted or file_deleted:
         return jsonify({"message": f"Chat {chat_id} eliminado."}), 200
-    else:
-        abort(404, description=f"Chat no encontrado: {chat_id}.")
+    
+    abort(404, description=f"Chat no encontrado: {chat_id}")
 
 
 @app.route("/chat/<chat_id>", methods=["POST"])
 def process_chat_message(chat_id: str) -> Tuple[Any, int]:
     """Procesa un mensaje de usuario, llama a la IA, y maneja títulos."""
-    app.logger.debug(f"Solicitud POST recibida para chat ID: {chat_id}")
+    app.logger.debug(f"POST /chat/{chat_id}")
 
     if not client:
-        app.logger.error(
-            f"Procesamiento abortado ({chat_id}): Cliente OpenAI no configurado.")
+        app.logger.error(f"Cliente OpenAI no configurado (chat: {chat_id})")
         return jsonify({"error": "Servicio AI no configurado."}), 503
 
-    messages = load_chat_messages(chat_id)
+    messages = chat_manager.load_messages(chat_id)
     if messages is None:
-        app.logger.warning(f"POST a chat inexistente o con error: {chat_id}")
-        abort(404, description=f"Chat no encontrado o corrupto: {chat_id}.")
+        app.logger.warning(f"Chat inexistente o corrupto: {chat_id}")
+        abort(404, description=f"Chat no encontrado: {chat_id}")
 
+    # Validar datos de entrada
     try:
         data = request.get_json()
         if not data or "mensaje" not in data:
-            app.logger.warning(f"POST inválido ({chat_id}): Falta 'mensaje'.")
+            app.logger.warning(f"Falta campo 'mensaje' (chat: {chat_id})")
             return jsonify({"error": "Falta campo 'mensaje'."}), 400
+
         user_input = data["mensaje"].strip()
         if not user_input:
-            app.logger.warning(f"POST inválido ({chat_id}): Mensaje vacío.")
+            app.logger.warning(f"Mensaje vacío (chat: {chat_id})")
             return jsonify({"error": "Mensaje vacío."}), 400
 
         modelo_seleccionado = config.validate_model(
             data.get("modelo", config.OPENAI_CHAT_MODEL))
-        app.logger.info(
-            f"Procesando mensaje para chat {chat_id} usando modelo: {modelo_seleccionado}")
+        app.logger.info(f"Procesando mensaje (chat: {chat_id}, modelo: {modelo_seleccionado})")
 
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.exception(
-            f"Error procesando JSON de entrada para chat {chat_id}: {e}")
-        return jsonify({"error": "Error procesando datos de entrada."}), 400
+    except Exception as e:
+        app.logger.exception(f"Error procesando entrada (chat: {chat_id}): {e}")
+        return jsonify({"error": "Error procesando datos."}), 400
 
+    # Agregar mensaje del usuario
     messages.append({"role": "user", "content": user_input})
-    messages_for_api = _apply_context_limit(messages)
-    assistant_reply_content = _call_openai_api(
+    messages_for_api = chat_manager.apply_context_limit(messages)
+
+    # Llamar a OpenAI
+    assistant_reply = openai_service.call_api(
         messages_for_api,
         modelo_seleccionado,
         purpose="chat"
     )
 
-    if assistant_reply_content is None:
-        app.logger.error(f"Llamada API fallida para chat {chat_id}")
-        return jsonify({"error": "Error contactando asistente AI. Intenta de nuevo."}), 503
+    if assistant_reply is None:
+        app.logger.error(f"Llamada API fallida (chat: {chat_id})")
+        return jsonify({"error": "Error contactando asistente AI."}), 503
 
-    messages.append({"role": "assistant", "content": assistant_reply_content})
-    metadata = load_metadata()
-    new_title = _update_chat_title_if_needed(chat_id, messages, metadata)
+    # Guardar respuesta
+    messages.append({"role": "assistant", "content": assistant_reply})
+    
+    # Actualizar metadata y título
+    metadata = metadata_manager.load()
+    new_title = openai_service.update_title_if_needed(chat_id, messages, metadata)
 
     now_iso = datetime.now(timezone.utc).isoformat()
     if chat_id in metadata:
@@ -507,24 +625,23 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
         if new_title:
             metadata[chat_id]["title"] = new_title
     else:
-        app.logger.warning(
-            f"Creando metadata faltante para {chat_id} sobre la marcha.")
+        app.logger.warning(f"Creando metadata faltante para {chat_id}")
         metadata[chat_id] = {
-            "id": chat_id, "title": (new_title or "Chat Recuperado"),
-            "created_at": now_iso, "last_updated": now_iso
+            "id": chat_id,
+            "title": new_title or "Chat Recuperado",
+            "created_at": now_iso,
+            "last_updated": now_iso
         }
 
-    save_metadata(metadata)
-    save_chat_messages(chat_id, messages)
+    metadata_manager.save(metadata)
+    chat_manager.save_messages(chat_id, messages)
 
-    response_data = {
-        "respuesta": assistant_reply_content,
+    app.logger.info(f"Respuesta enviada (chat: {chat_id}, modelo: {modelo_seleccionado})")
+    return jsonify({
+        "respuesta": assistant_reply,
         "timestamp": now_iso,
         "new_title": metadata.get(chat_id, {}).get("title")
-    }
-    app.logger.info(
-        f"Respuesta enviada exitosamente para chat {chat_id} (Modelo: {modelo_seleccionado}).")
-    return jsonify(response_data), 200
+    }), 200
 
 # Manejadores de errores
 
@@ -549,22 +666,8 @@ def handle_generic_exception(error: Exception) -> Tuple[Any, int]:  # pylint: di
     return jsonify(error="Ocurrió un error inesperado."), 500
 
 
-if __name__ == "__main__":
-    try:
-        ensure_chats_dir_exists()
-    except OSError as e:
-        app.logger.critical(
-            f"CRITICAL: No se pudo crear directorio de chats '{e.filename}': {e}")
-        sys.exit(1)
-    except Exception as e:  # pylint: disable=broad-except
-        app.logger.critical(f"CRITICAL: Error inicializando directorios: {e}")
-        sys.exit(1)
-
-    if not config.OPENAI_API_KEY:
-        print("\n" + "="*60, file=sys.stderr)
-        print(" ADVERTENCIA: OPENAI_APIKEY no configurada...", file=sys.stderr)
-        print("="*60 + "\n", file=sys.stderr)
-
+def print_startup_banner() -> None:
+    """Imprime el banner de inicio del servidor."""
     print("\n" + "="*60)
     print(" Synapse AI Server")
     print("="*60)
@@ -574,6 +677,25 @@ if __name__ == "__main__":
     print(" URL Local: http://127.0.0.1:5000")
     print("\nIniciando servidor Flask...")
 
+
+def main() -> None:
+    """Función principal de inicialización."""
+    # Asegurar directorios existen
+    try:
+        FileManager.ensure_directory_exists(config.CHATS_DIR)
+    except OSError as e:
+        app.logger.critical(f"Error crítico creando directorios: {e}")
+        sys.exit(1)
+
+    # Advertencia si no hay API key
+    if not config.OPENAI_API_KEY:
+        print("\n" + "="*60, file=sys.stderr)
+        print(" ADVERTENCIA: OPENAI_APIKEY no configurada", file=sys.stderr)
+        print("="*60 + "\n", file=sys.stderr)
+
+    print_startup_banner()
+
+    # Iniciar servidor
     app.run(
         host="0.0.0.0",
         port=5000,
@@ -581,3 +703,7 @@ if __name__ == "__main__":
         threaded=True,
         use_reloader=config.FLASK_DEBUG
     )
+
+
+if __name__ == "__main__":
+    main()
