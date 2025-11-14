@@ -57,7 +57,7 @@ chat_app/
 
 ```bash
 # 1. Clonar repositorio
-git clone https://github.com/SergioCalderon101/chatbot.git
+git clone https://github.com/SergioCalderon101/Project-Synapse.git
 cd chat_app/Project
 
 # 2. Crear entorno virtual
