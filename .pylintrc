@@ -1,0 +1,49 @@
+[MASTER]
+# Usar múltiples procesos para acelerar Pylint
+jobs=1
+
+# Archivos o directorios a ignorar
+ignore=venv,.venv,env,.env,__pycache__,.git
+
+[MESSAGES CONTROL]
+# Deshabilitar advertencias específicas
+disable=
+    # Excepciones muy amplias (ya manejado con comentarios inline)
+    broad-except,
+    # Líneas demasiado largas (Flask routes pueden ser largas)
+    line-too-long,
+    # Muy pocos métodos públicos
+    too-few-public-methods,
+    # Muy muchos argumentos
+    too-many-arguments,
+    # Demasiadas variables locales
+    too-many-locals,
+    # Missing docstring
+    missing-function-docstring,
+    missing-module-docstring,
+    missing-class-docstring,
+    # Logging con f-strings (más moderno y legible que % formatting)
+    logging-fstring-interpolation,
+    # Atributos no existentes (falsos positivos con OpenAI SDK)
+    no-member
+
+[FORMAT]
+# Máxima longitud de línea
+max-line-length=120
+
+# Número máximo de líneas en un módulo
+max-module-lines=1000
+
+[BASIC]
+# Convenciones de nomenclatura
+good-names=i,j,k,ex,e,_,id,app
+
+[DESIGN]
+# Número máximo de argumentos
+max-args=7
+
+# Número máximo de atributos
+max-attributes=10
+
+# Número máximo de ramas
+max-branches=15

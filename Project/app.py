@@ -90,7 +90,7 @@ try:
     )
     file_handler.setFormatter(log_formatter)
     app.logger.addHandler(file_handler)
-except Exception as e:
+except (OSError, PermissionError) as e:
     print(
         f"WARNING: No se pudo configurar el logging a archivo '{config.LOG_FILE}': {e}", file=sys.stderr)
 
@@ -106,7 +106,7 @@ if config.OPENAI_API_KEY:
         app.logger.info("Cliente OpenAI inicializado.")
         app.logger.debug(
             f"Modelo Chat (Default): {config.OPENAI_CHAT_MODEL}, Modelo Título: {config.OPENAI_TITLE_MODEL}")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(f"Error fatal inicializando OpenAI: {e}")
 else:
     app.logger.warning(
@@ -144,13 +144,13 @@ def load_metadata() -> Dict[str, Dict[str, Any]]:
                 except (IOError, json.JSONDecodeError) as e:
                     app.logger.error(
                         f"Error cargando o parseando {config.METADATA_FILE}: {e}. Reiniciando metadatos.")
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-except
                     app.logger.exception(
                         f"Error inesperado cargando metadatos: {e}")
     except TimeoutError:
         app.logger.error(
             f"Timeout esperando el lock para leer {config.METADATA_FILE}.")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(
             f"Error adquiriendo lock o durante lectura de metadatos: {e}")
     return metadata
@@ -169,13 +169,13 @@ def save_metadata(metadata: Dict[str, Dict[str, Any]]) -> None:
             except IOError as e:
                 app.logger.error(
                     f"Error de I/O guardando metadatos en {config.METADATA_FILE}: {e}")
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 app.logger.exception(
                     f"Error inesperado guardando metadatos: {e}")
     except TimeoutError:
         app.logger.error(
             f"Timeout esperando el lock para guardar {config.METADATA_FILE}.")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(
             f"Error adquiriendo lock o durante guardado de metadatos: {e}")
 
@@ -223,7 +223,7 @@ def load_chat_messages(chat_id: str) -> Optional[List[Dict[str, str]]]:
         app.logger.error(
             f"Error cargando o parseando chat {chat_id} desde {chat_file}: {e}")
         return None
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(f"Error inesperado cargando chat {chat_id}: {e}")
         return None
 
@@ -243,7 +243,7 @@ def save_chat_messages(chat_id: str, messages: List[Dict[str, str]]) -> None:
             f"Chat {chat_id} guardado en {chat_file} ({len(messages_to_save)} msgs).")
     except IOError as e:
         app.logger.error(f"Error guardando chat {chat_id} en {chat_file}: {e}")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(f"Error inesperado guardando chat {chat_id}: {e}")
 
 
@@ -302,7 +302,7 @@ def _call_openai_api(messages_for_api: List[Dict[str, str]], model_to_use: str, 
         app.logger.error(
             f"Error de API OpenAI ({purpose}, modelo: {model_to_use}): {e.status_code} - {e.message}")
         return None
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(
             f"Error inesperado en llamada a OpenAI API ({purpose}, modelo: {model_to_use}): {e}")
         return None
@@ -369,7 +369,7 @@ def _update_chat_title_if_needed(chat_id: str, messages: List[Dict[str, str]], m
 def home() -> Any:
     try:
         return render_template("index.html")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(f"Error renderizando index.html: {e}")
         return "Error UI.", 500
 
@@ -387,7 +387,7 @@ def new_chat() -> Tuple[Any, int]:
         save_metadata(metadata)
         app.logger.info(f"Nuevo chat creado con ID: {chat_id}")
         return jsonify({"chat_id": chat_id, "messages": messages, "title": "Nuevo Chat"}), 201
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(f"Error creando chat: {e}")
         return jsonify({"error": "No se pudo crear."}), 500
 
@@ -400,7 +400,7 @@ def get_history() -> Tuple[Any, int]:
             "last_updated", ""), reverse=True)
         app.logger.debug(f"Historial solicitado. {len(history_list)} chats.")
         return jsonify({"history": history_list}), 200
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(f"Error historial: {e}")
         return jsonify({"error": "Error historial."}), 500
 
@@ -435,7 +435,7 @@ def delete_chat(chat_id: str) -> Tuple[Any, int]:
             os.remove(chat_file)
             file_deleted = True
             app.logger.info(f"Archivo eliminado: {chat_file}")
-        except Exception as e:
+        except (OSError, PermissionError) as e:
             app.logger.error(f"Error eliminando {chat_file}: {e}")
             return jsonify({"error": "Error eliminando archivo."}), 500
     if metadata_deleted or file_deleted:
@@ -474,7 +474,7 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
         app.logger.info(
             f"Procesando mensaje para chat {chat_id} usando modelo: {modelo_seleccionado}")
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.exception(
             f"Error procesando JSON de entrada para chat {chat_id}: {e}")
         return jsonify({"error": "Error procesando datos de entrada."}), 400
@@ -537,7 +537,7 @@ def internal_error(error: Exception) -> Tuple[Any, int]:
 
 
 @app.errorhandler(Exception)
-def handle_generic_exception(error: Exception) -> Tuple[Any, int]:
+def handle_generic_exception(error: Exception) -> Tuple[Any, int]:  # pylint: disable=broad-except
     app.logger.exception(
         f"Excepción no manejada capturada globalmente: {error}")
     return jsonify(error="Ocurrió un error inesperado."), 500
@@ -550,7 +550,7 @@ if __name__ == "__main__":
         app.logger.critical(
             f"CRITICAL: No se pudo crear directorio de chats '{e.filename}': {e}")
         sys.exit(1)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         app.logger.critical(f"CRITICAL: Error inicializando directorios: {e}")
         sys.exit(1)
 
