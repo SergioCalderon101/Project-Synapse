@@ -42,8 +42,9 @@ class Config:
     LOG_FILE: str = os.path.join(LOGS_FOLDER, "app.log")
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
-    FLASK_DEBUG: bool = os.getenv("FLASK_DEBUG", "True").lower() == "true"
+    FLASK_DEBUG: bool = os.getenv("FLASK_DEBUG", "False").lower() == "true"
     CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "*")
+    PORT: int = int(os.getenv("PORT", "5000"))
 
     # Chat
     MAX_TITLE_LENGTH: int = 40
@@ -759,7 +760,7 @@ def main() -> None:
     # Iniciar servidor
     app.run(
         host="0.0.0.0",
-        port=5000,
+        port=config.PORT,
         debug=config.FLASK_DEBUG,
         threaded=True,
         use_reloader=config.FLASK_DEBUG

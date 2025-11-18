@@ -1,0 +1,19 @@
+# Normalización de line endings para compatibilidad cross-platform
+* text=auto
+
+# Scripts específicos de plataforma
+*.sh text eol=lf
+*.ps1 text eol=crlf
+
+# Archivos de código
+*.py text eol=lf diff=python
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Archivos binarios
+*.png binary
+*.jpg binary
+*.ico binary

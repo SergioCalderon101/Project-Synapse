@@ -1,21 +1,12 @@
+# =============================================================================
+# PYTHON
+# =============================================================================
+
 # Entornos virtuales de Python
 venv/
 env/
 ENV/
 .venv/
-
-# Variables de entorno y configuración sensible
-.env
-.env.local
-.env.*.local
-
-# Archivos de logs
-logs/
-*.log
-
-# Datos de conversaciones (privacidad del usuario)
-chats/
-*.json
 
 # Archivos de caché de Python
 __pycache__/
@@ -40,28 +31,131 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# IDE - Visual Studio Code
-.vscode/
-*.code-workspace
+# PyInstaller
+*.manifest
+*.spec
 
-# IDE - PyCharm
-.idea/
+# Installers
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Sistema operativo
-.DS_Store
-Thumbs.db
-desktop.ini
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# =============================================================================
+# SEGURIDAD Y CONFIGURACIÓN SENSIBLE
+# =============================================================================
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+Project/.env
+
+# Archivos de configuración locales
+config.local.json
+secrets.json
+
+# =============================================================================
+# DATOS Y LOGS
+# =============================================================================
+
+# Archivos de logs
+logs/
+*.log
+
+# Datos de conversaciones (privacidad del usuario)
+chats/
+Project/chats/
+*.json
+!chats_metadata.json
+!package.json
 
 # Archivos de lock (generados automáticamente)
 *.lock
 metadata.lock
+Project/*.lock
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Bases de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# =============================================================================
+# IDEs Y EDITORES
+# =============================================================================
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.history/
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# =============================================================================
+# SISTEMA OPERATIVO
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# =============================================================================
+# OTROS
+# =============================================================================
 
 # Archivos temporales
 *.tmp
 *.bak
 *.swp
-*~
+temp/
+tmp/
