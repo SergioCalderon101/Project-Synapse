@@ -185,9 +185,17 @@ class FileManager:
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                content = json.load(f)
+                # Validar que el contenido no esté vacío o sea None
+                if content is None:
+                    app.logger.warning(f"Archivo {file_path} contiene null")
+                    return None
+                return content
         except (IOError, json.JSONDecodeError) as e:
             app.logger.error(f"Error leyendo {file_path}: {e}")
+            return None
+        except Exception as e:
+            app.logger.exception(f"Error inesperado leyendo {file_path}: {e}")
             return None
 
     @staticmethod
@@ -294,9 +302,18 @@ class ChatManager:
             app.logger.warning(f"Archivo de chat no encontrado: {chat_file}")
             return None
 
-        if not isinstance(messages, list) or not messages:
-            app.logger.warning(f"Chat {chat_file} vacío o con formato inválido.")
+        if not isinstance(messages, list):
+            app.logger.error(f"Chat {chat_file} con formato inválido (no es lista).")
+            return None
+        
+        if not messages:
+            app.logger.warning(f"Chat {chat_file} vacío, inicializando con system message.")
             return [config.DEFAULT_SYSTEM_MESSAGE.copy()]
+        
+        # Validar que todos los elementos sean diccionarios con 'role' y 'content'
+        if not all(isinstance(m, dict) and 'role' in m and 'content' in m for m in messages):
+            app.logger.error(f"Chat {chat_file} contiene mensajes con formato inválido.")
+            return None
 
         messages = cls.ensure_system_message(messages)
         messages = cls.apply_context_limit(messages)
@@ -323,6 +340,15 @@ class ChatManager:
 
 
 chat_manager = ChatManager()
+
+
+def validate_chat_id(chat_id: str) -> bool:
+    """Valida que chat_id sea un UUID válido."""
+    try:
+        uuid.UUID(chat_id)
+        return True
+    except (ValueError, AttributeError):
+        return False
 
 
 class OpenAIService:
@@ -509,6 +535,10 @@ def load_specific_chat(chat_id: str) -> Tuple[Any, int]:
     """Carga un chat específico."""
     app.logger.debug(f"GET /chat/{chat_id}")
     
+    if not validate_chat_id(chat_id):
+        app.logger.warning(f"Chat ID inválido rechazado: {chat_id}")
+        abort(400, description="Chat ID inválido. Debe ser un UUID válido.")
+    
     messages = chat_manager.load_messages(chat_id)
     if messages is None:
         abort(404, description=f"Chat no encontrado: {chat_id}")
@@ -533,6 +563,10 @@ def load_specific_chat(chat_id: str) -> Tuple[Any, int]:
 def delete_chat(chat_id: str) -> Tuple[Any, int]:
     """Elimina un chat."""
     app.logger.info(f"DELETE /chat/{chat_id}")
+    
+    if not validate_chat_id(chat_id):
+        app.logger.warning(f"Chat ID inválido rechazado: {chat_id}")
+        abort(400, description="Chat ID inválido. Debe ser un UUID válido.")
     
     chat_file = chat_manager.get_chat_file_path(chat_id)
     metadata = metadata_manager.load()
@@ -568,6 +602,10 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
     """Procesa un mensaje de usuario, llama a la IA, y maneja títulos."""
     app.logger.debug(f"POST /chat/{chat_id}")
 
+    if not validate_chat_id(chat_id):
+        app.logger.warning(f"Chat ID inválido rechazado: {chat_id}")
+        abort(400, description="Chat ID inválido. Debe ser un UUID válido.")
+
     if not client:
         app.logger.error(f"Cliente OpenAI no configurado (chat: {chat_id})")
         return jsonify({"error": "Servicio AI no configurado."}), 503
@@ -579,23 +617,29 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
 
     # Validar datos de entrada
     try:
-        data = request.get_json()
-        if not data or "mensaje" not in data:
-            app.logger.warning(f"Falta campo 'mensaje' (chat: {chat_id})")
-            return jsonify({"error": "Falta campo 'mensaje'."}), 400
-
-        user_input = data["mensaje"].strip()
-        if not user_input:
-            app.logger.warning(f"Mensaje vacío (chat: {chat_id})")
-            return jsonify({"error": "Mensaje vacío."}), 400
-
-        modelo_seleccionado = config.validate_model(
-            data.get("modelo", config.OPENAI_CHAT_MODEL))
-        app.logger.info(f"Procesando mensaje (chat: {chat_id}, modelo: {modelo_seleccionado})")
-
+        data = request.get_json(force=True)
     except Exception as e:
-        app.logger.exception(f"Error procesando entrada (chat: {chat_id}): {e}")
-        return jsonify({"error": "Error procesando datos."}), 400
+        app.logger.warning(f"JSON inválido en request (chat: {chat_id}): {e}")
+        return jsonify({"error": "Formato JSON inválido."}), 400
+    
+    if not data or "mensaje" not in data:
+        app.logger.warning(f"Falta campo 'mensaje' (chat: {chat_id})")
+        return jsonify({"error": "Falta campo 'mensaje'."}), 400
+
+    
+    try:
+        user_input = data["mensaje"].strip()
+    except (KeyError, AttributeError, TypeError) as e:
+        app.logger.warning(f"Campo 'mensaje' inválido (chat: {chat_id}): {e}")
+        return jsonify({"error": "Campo 'mensaje' inválido."}), 400
+    
+    if not user_input:
+        app.logger.warning(f"Mensaje vacío (chat: {chat_id})")
+        return jsonify({"error": "Mensaje vacío."}), 400
+
+    modelo_seleccionado = config.validate_model(
+        data.get("modelo", config.OPENAI_CHAT_MODEL))
+    app.logger.info(f"Procesando mensaje (chat: {chat_id}, modelo: {modelo_seleccionado})")
 
     # Agregar mensaje del usuario
     messages.append({"role": "user", "content": user_input})
@@ -634,7 +678,10 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
         }
 
     metadata_manager.save(metadata)
-    chat_manager.save_messages(chat_id, messages)
+    
+    if not chat_manager.save_messages(chat_id, messages):
+        app.logger.error(f"Error guardando mensajes después de respuesta (chat: {chat_id})")
+        # Aún devolvemos la respuesta al usuario, pero loggeamos el error
 
     app.logger.info(f"Respuesta enviada (chat: {chat_id}, modelo: {modelo_seleccionado})")
     return jsonify({
@@ -644,6 +691,13 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
     }), 200
 
 # Manejadores de errores
+
+
+@app.errorhandler(400)
+def bad_request_error(error: Exception) -> Tuple[Any, int]:
+    description = getattr(error, 'description', 'Solicitud inválida.')
+    app.logger.warning(f"Error 400: {request.path} - {description}")
+    return jsonify(error=description), 400
 
 
 @app.errorhandler(404)
@@ -657,6 +711,13 @@ def not_found_error(error: Exception) -> Tuple[Any, int]:
 def internal_error(error: Exception) -> Tuple[Any, int]:
     app.logger.exception(f"Error 500 Interno: {error}")
     return jsonify(error="Ocurrió un error interno en el servidor."), 500
+
+
+@app.errorhandler(503)
+def service_unavailable_error(error: Exception) -> Tuple[Any, int]:
+    description = getattr(error, 'description', 'Servicio no disponible.')
+    app.logger.error(f"Error 503: {request.path} - {description}")
+    return jsonify(error=description), 503
 
 
 @app.errorhandler(Exception)
