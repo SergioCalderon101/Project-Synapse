@@ -161,7 +161,12 @@ Todos los documentos están en español y son muy detallados.
 
 **Auditoría completada por:** GitHub Copilot Agent  
 **Fecha:** 21 de Noviembre, 2025  
-**Tiempo invertido:** Análisis exhaustivo completo
+**Alcance de análisis:**
+- 30 commits históricos revisados
+- 2 archivos principales de código analizados (app.py, script.js)
+- Búsqueda exhaustiva de patrones de credenciales
+- Análisis de estructura y arquitectura
+- Revisión de configuración y dependencias
 
 ---
 
