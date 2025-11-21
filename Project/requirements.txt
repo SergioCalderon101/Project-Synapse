@@ -1,7 +1,6 @@
 # =============================================================================
 # DEPENDENCIAS DE SYNAPSE AI
 # =============================================================================
-# Versiones fijas para reproducibilidad y estabilidad
 
 # Framework web
 Flask==3.0.3
