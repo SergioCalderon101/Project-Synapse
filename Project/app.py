@@ -9,6 +9,9 @@ from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple, Any
 from flask import Flask, request, jsonify, render_template, abort
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_talisman import Talisman
 from openai import OpenAI, APIError
 from dotenv import load_dotenv
 from filelock import FileLock
@@ -50,6 +53,10 @@ class Config:
     MAX_TITLE_LENGTH: int = 40
     MAX_CONTEXT_LENGTH: int = 12
     TITLE_GENERATION_MIN_MESSAGES: int = 5
+    
+    # Validación de input
+    MAX_MESSAGE_LENGTH: int = 4000  # Máximo de caracteres por mensaje
+    MIN_MESSAGE_LENGTH: int = 1     # Mínimo de caracteres
 
     @classmethod
     def validate_model(cls, model: str) -> str:
@@ -159,6 +166,43 @@ def setup_openai_client() -> Optional[OpenAI]:
 # Configurar aplicación
 setup_cors()
 setup_logging()
+
+# Configurar rate limiting
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+# Configurar headers de seguridad (solo en producción)
+if not config.FLASK_DEBUG:
+    Talisman(
+        app,
+        content_security_policy={
+            'default-src': "'self'",
+            'script-src': [
+                "'self'",
+                "'unsafe-inline'",  # Necesario para scripts inline en index.html
+                'https://cdn.jsdelivr.net',
+                'https://unpkg.com'
+            ],
+            'style-src': [
+                "'self'",
+                "'unsafe-inline'",  # Necesario para estilos inline
+                'https://fonts.googleapis.com',
+                'https://unpkg.com',
+                'https://cdn.jsdelivr.net'
+            ],
+            'font-src': [
+                "'self'",
+                'https://fonts.gstatic.com',
+                'https://unpkg.com'
+            ]
+        },
+        force_https=False  # Desactivado para desarrollo local sin SSL
+    )
+
 client = setup_openai_client()
 
 # Clases auxiliares
@@ -599,6 +643,7 @@ def delete_chat(chat_id: str) -> Tuple[Any, int]:
 
 
 @app.route("/chat/<chat_id>", methods=["POST"])
+@limiter.limit("30 per minute")  # Máximo 30 mensajes por minuto
 def process_chat_message(chat_id: str) -> Tuple[Any, int]:
     """Procesa un mensaje de usuario, llama a la IA, y maneja títulos."""
     app.logger.debug(f"POST /chat/{chat_id}")
@@ -634,9 +679,17 @@ def process_chat_message(chat_id: str) -> Tuple[Any, int]:
         app.logger.warning(f"Campo 'mensaje' inválido (chat: {chat_id}): {e}")
         return jsonify({"error": "Campo 'mensaje' inválido."}), 400
     
-    if not user_input:
+    # Validación de longitud mínima
+    if len(user_input) < config.MIN_MESSAGE_LENGTH:
         app.logger.warning(f"Mensaje vacío (chat: {chat_id})")
         return jsonify({"error": "Mensaje vacío."}), 400
+    
+    # Validación de longitud máxima
+    if len(user_input) > config.MAX_MESSAGE_LENGTH:
+        app.logger.warning(f"Mensaje demasiado largo (chat: {chat_id}): {len(user_input)} chars")
+        return jsonify({
+            "error": f"Mensaje demasiado largo. Máximo {config.MAX_MESSAGE_LENGTH} caracteres."
+        }), 400
 
     modelo_seleccionado = config.validate_model(
         data.get("modelo", config.OPENAI_CHAT_MODEL))
