@@ -2,12 +2,6 @@
 
 Aplicación de chat web que integra modelos de OpenAI con gestión de historial de conversaciones y generación automática de títulos.
 
-## 📚 Documentación
-
-- **[SECURITY_AUDIT.md](SECURITY_AUDIT.md)** - Auditoría completa de seguridad y calidad de código
-- **[RECOMENDACIONES.md](RECOMENDACIONES.md)** - Recomendaciones detalladas de mejoras
-- **[CHECKLIST_PRODUCCION.md](CHECKLIST_PRODUCCION.md)** - Checklist para despliegue a producción
-
 ## 📁 Estructura
 
 ```
@@ -53,10 +47,12 @@ Project/
 
 ## 🔐 Seguridad
 
-Este proyecto ha sido auditado para seguridad. Ver [SECURITY_AUDIT.md](SECURITY_AUDIT.md) para detalles completos.
-
-**Puntos importantes:**
+**Características implementadas:**
 - ✅ Sin credenciales hardcodeadas
 - ✅ Variables de entorno para configuración sensible
-- ✅ .gitignore apropiado
-- ⚠️ Leer [CHECKLIST_PRODUCCION.md](CHECKLIST_PRODUCCION.md) antes de desplegar
+- ✅ Rate limiting (200 req/día, 50 req/hora, 30 msg/min)
+- ✅ Validación de input (1-4000 caracteres)
+- ✅ Headers de seguridad HTTP (CSP, HSTS, etc.)
+- ✅ `.gitignore` apropiado
+
+**⚠️ Importante:** Antes de desplegar a producción, revisa [DEPLOYMENT.md](DEPLOYMENT.md) para configuración segura y checklist completo.
