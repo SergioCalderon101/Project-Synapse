@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let historyData = [];
 
             try {
-                const response = await fetch("/history");
+                const response = await fetch("/api/v1/history");
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const data = await response.json();
@@ -342,7 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
             UI.showLoadingOverlay(true, 'Eliminando chat...');
 
             try {
-                const response = await fetch(`/chat/${chatId}`, { method: 'DELETE' });
+                const response = await fetch(`/api/v1/chat/${chatId}`, { method: 'DELETE' });
                 
                 if (!response.ok) {
                     const errorMsg = await this.extractErrorMessage(response);
@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
             UI.clearChatLog();
 
             try {
-                const response = await fetch("/new_chat", { method: "POST" });
+                const response = await fetch("/api/v1/chat", { method: "POST" });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const data = await response.json();
@@ -428,7 +428,7 @@ document.addEventListener("DOMContentLoaded", () => {
             UI.clearChatLog();
 
             try {
-                const response = await fetch(`/chat/${chatId}`);
+                const response = await fetch(`/api/v1/chat/${chatId}`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const data = await response.json();
@@ -507,7 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ...(state.selectedModel && { modelo: state.selectedModel })
             };
 
-            const response = await fetch(`/chat/${state.currentChatId}`, {
+            const response = await fetch(`/api/v1/chat/${state.currentChatId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

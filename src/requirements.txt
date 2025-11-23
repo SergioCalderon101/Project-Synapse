@@ -24,6 +24,10 @@ python-dotenv==1.0.1
 # File locking para concurrencia
 filelock==3.16.1
 
+# Validación y serialización de datos
+pydantic==2.9.2
+pydantic-settings==2.6.0
+
 # Dependencias indirectas (evitar conflictos)
 certifi==2024.8.30
 charset-normalizer==3.4.0
