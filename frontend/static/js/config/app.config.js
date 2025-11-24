@@ -35,7 +35,7 @@ export const CONFIG = {
  * Sets up syntax highlighting with Highlight.js
  */
 export function configureMarked() {
-    if (typeof marked !== 'undefined') {
+    if (typeof marked !== 'undefined' && typeof hljs !== 'undefined') {
         marked.setOptions({
             highlight: (code, lang) => {
                 if (lang && hljs.getLanguage(lang)) {
@@ -50,5 +50,7 @@ export function configureMarked() {
             breaks: true,
             gfm: true
         });
+    } else {
+        console.warn('Marked.js or Highlight.js not loaded, markdown rendering may be limited');
     }
 }

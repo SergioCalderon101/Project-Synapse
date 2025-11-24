@@ -168,8 +168,8 @@ export class App {
         const mostRecentChat = initialHistory[0];
         if (mostRecentChat) {
             await this.chatController.load(mostRecentChat.id);
-        } else {
-            this.elements.welcomeMessage?.style.setProperty('display', 'flex');
+        } else if (this.elements.welcomeMessage) {
+            this.elements.welcomeMessage.style.display = 'flex';
         }
     }
 }

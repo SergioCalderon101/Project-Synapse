@@ -53,9 +53,8 @@ export class ChatView {
             const { html, isRendered } = renderMarkdown(content);
             messageContentDiv.innerHTML = html;
             
-            if (isRendered) {
-                highlightCodeBlocks(messageContentDiv);
-            }
+            // Always try to highlight code blocks if they exist
+            highlightCodeBlocks(messageContentDiv);
         } else {
             messageContentDiv[isHTML ? 'innerHTML' : 'textContent'] = content;
         }
@@ -125,7 +124,7 @@ export class ChatView {
     clearChatLog() {
         this.elements.chatLog.innerHTML = '';
         if (this.elements.welcomeMessage) {
-            this.elements.welcomeMessage.style.setProperty('display', 'flex');
+            this.elements.welcomeMessage.style.display = 'flex';
         }
         this.clearInput();
     }

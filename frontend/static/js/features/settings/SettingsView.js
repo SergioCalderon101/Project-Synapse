@@ -1,4 +1,4 @@
-import { getElement, querySelectorAll, addClass, removeClass, toggleClass } from '../../utils/dom.js';
+import { getElement, querySelectorAll, addClass, removeClass, toggleClass, querySelector } from '../../utils/dom.js';
 import { CONFIG } from '../../config/app.config.js';
 
 /**
@@ -32,7 +32,7 @@ export class SettingsView {
      * @param {string} savedModel - Saved model identifier
      */
     initializeModelSelection(savedModel) {
-        const radioToCheck = document.querySelector(
+        const radioToCheck = querySelector(
             `input[name="modelo"][value="${savedModel}"]`
         );
 

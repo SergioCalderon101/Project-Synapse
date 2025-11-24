@@ -36,7 +36,7 @@ export function querySelectorAll(selector, parent = document) {
  * Create element with optional attributes and content
  * @param {string} tag - HTML tag name
  * @param {Object} [attributes={}] - Element attributes
- * @param {string} [content=''] - Element content (text or HTML)
+ * @param {string} [content=''] - Element content (text or HTML) - only used if innerHTML not in attributes
  * @returns {HTMLElement} Created element
  */
 export function createElement(tag, attributes = {}, content = '') {
@@ -54,7 +54,8 @@ export function createElement(tag, attributes = {}, content = '') {
         }
     });
     
-    if (content) {
+    // Only use content parameter if innerHTML wasn't set in attributes
+    if (content && !attributes.innerHTML) {
         element.innerHTML = content;
     }
     
