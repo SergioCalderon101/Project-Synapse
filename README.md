@@ -25,70 +25,68 @@
 
 ```
 chat_app/
-├── 📄 .env.example              # Template de configuración
-├── 📄 .env                      # Configuración (crear desde .example)
+├── 📂 backend/                  # Backend (Python/Flask)
+│   ├── 🚀 run.py               # Script de inicio
+│   ├── 🎯 app.py               # Factory de aplicación Flask
+│   ├── 📋 requirements.txt     # Dependencias Python
+│   ├── 🔧 start.bat            # Script inicio Windows
+│   ├── 🔧 start.sh             # Script inicio Linux/Mac
+│   │
+│   ├── api/                    # Capa de presentación (API)
+│   │   ├── routes/             # Endpoints REST
+│   │   │   ├── chat.py         # CRUD de chats
+│   │   │   ├── history.py      # Historial
+│   │   │   └── health.py       # Health checks
+│   │   └── middleware/
+│   │       └── error_handlers.py
+│   │
+│   ├── core/                   # Configuración y núcleo
+│   │   ├── config.py           # Settings con Pydantic
+│   │   ├── dependencies.py     # Inyección de dependencias
+│   │   └── logging.py          # Sistema de logging
+│   │
+│   ├── models/                 # Modelos de dominio (Pydantic)
+│   │   ├── chat.py             # Chat, ChatMetadata
+│   │   └── message.py          # Message
+│   │
+│   ├── schemas/                # Schemas de request/response
+│   │   └── chat.py             # DTOs para API
+│   │
+│   ├── repositories/           # Capa de persistencia
+│   │   ├── chat_repository.py  # Gestión de chats
+│   │   ├── metadata_repository.py
+│   │   └── file_manager.py     # Operaciones de archivos
+│   │
+│   ├── services/               # Lógica de negocio
+│   │   ├── chat_service.py     # Servicio de chat
+│   │   └── openai_service.py   # Integración OpenAI
+│   │
+│   ├── utils/                  # Utilidades
+│   │   └── validators.py       # Validadores
+│   │
+│   └── data/                   # Datos persistentes
+│       ├── chats/              # Conversaciones JSON
+│       └── logs/               # Logs de aplicación
+│
+├── 📂 frontend/                 # Frontend (HTML/CSS/JS)
+│   ├── static/
+│   │   ├── css/
+│   │   │   └── style.css       # Estilos
+│   │   ├── js/
+│   │   │   └── app.js          # Lógica cliente
+│   │   └── favicon.svg
+│   └── templates/
+│       └── index.html          # UI principal
+│
+├── 📂 config/                   # Configuración
+│   ├── .env                    # Variables de entorno
+│   └── .env.example            # Template de configuración
+│
 ├── 📄 README.md                 # Este archivo
-├── 📄 STATUS.md                 # Estado del proyecto ← LEER PRIMERO
+├── 📄 STATUS.md                 # Estado del proyecto
 ├── 📄 QUICKSTART.md             # Guía de inicio rápido
 ├── 📄 IMPLEMENTATION.md         # Detalles de implementación
-├── 📄 DEPLOYMENT.md             # Guía de despliegue
-│
-└── src/                         # Código fuente
-    ├── 🚀 run.py               # ← Script de inicio PRINCIPAL
-    ├── 🎯 app_new.py           # ← Factory de aplicación Flask (NUEVO)
-    ├── 📄 app.py               # Factory original (legacy)
-    ├── 📋 requirements.txt     # Dependencias Python
-    │
-    ├── core/                   # Configuración y núcleo
-    │   ├── __init__.py
-    │   ├── config.py           # Settings con Pydantic
-    │   ├── dependencies.py     # Inyección de dependencias
-    │   └── logging.py          # Sistema de logging
-    │
-    ├── models/                 # Modelos de dominio (Pydantic)
-    │   ├── __init__.py
-    │   ├── chat.py             # Chat, ChatMetadata
-    │   └── message.py          # Message
-    │
-    ├── schemas/                # Schemas de request/response
-    │   ├── __init__.py
-    │   └── chat.py             # DTOs para API
-    │
-    ├── repositories/           # Capa de persistencia
-    │   ├── __init__.py
-    │   ├── chat_repository.py  # Gestión de chats
-    │   ├── metadata_repository.py
-    │   └── file_manager.py     # Operaciones de archivos
-    │
-    ├── services/               # Lógica de negocio
-    │   ├── __init__.py
-    │   ├── chat_service.py     # Servicio de chat
-    │   └── openai_service.py   # Integración OpenAI
-    │
-    ├── api/                    # Capa de presentación (API)
-    │   ├── __init__.py
-    │   ├── routes/             # Endpoints
-    │   │   ├── __init__.py
-    │   │   ├── chat.py         # CRUD de chats
-    │   │   ├── history.py      # Historial
-    │   │   └── health.py       # Health checks
-    │   └── middleware/
-    │       ├── __init__.py
-    │       └── error_handlers.py
-    │
-    ├── utils/                  # Utilidades
-    │   ├── __init__.py
-    │   └── validators.py       # Validadores
-    │
-    ├── static/                 # Frontend
-    │   ├── script.js           # Lógica cliente (actualizado a /api/v1/*)
-    │   └── style.css           # Estilos
-    │
-    ├── templates/              # HTML
-    │   └── index.html          # UI principal
-    │
-    ├── chats/                  # Almacenamiento de conversaciones
-    └── logs/                   # Logs de aplicación
+└── 📄 DEPLOYMENT.md             # Guía de despliegue
 ```
 
 ---
@@ -103,9 +101,9 @@ git clone https://github.com/SergioCalderon101/Project-Synapse.git
 cd chat_app
 
 # Copiar template de configuración
-cp .env.example .env
+cp config/.env.example config/.env
 
-# Editar .env y agregar tu API key de OpenAI
+# Editar config/.env y agregar tu API key de OpenAI
 # OPENAI_APIKEY=sk-tu-api-key-aqui
 ```
 
@@ -125,13 +123,13 @@ source venv/bin/activate
 ### 3️⃣ Instalar Dependencias
 
 ```bash
-pip install -r src/requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 ### 4️⃣ Iniciar Aplicación
 
 ```bash
-cd src
+cd backend
 python run.py
 ```
 
@@ -361,16 +359,3 @@ Este proyecto es de código abierto y está disponible bajo la licencia MIT.
 
 ---
 
-## 📞 Soporte
-
-¿Problemas? Abre un [issue](https://github.com/SergioCalderon101/Project-Synapse/issues) en GitHub.
-
----
-
-<div align="center">
-
-**⭐ Si te gusta este proyecto, dale una estrella en GitHub! ⭐**
-
-Hecho con ❤️ y ☕ por Sergio Calderón
-
-</div>

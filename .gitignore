@@ -155,10 +155,14 @@ $RECYCLE.BIN/
 
 # Carpeta de backups
 backup/
+backup_*/
 *.backup
 *_old.py
 *_old_*.py
 app_old*.py
+
+# Archivos de reorganización temporal
+backup_reorg_*/
 
 # =============================================================================
 # OTROS

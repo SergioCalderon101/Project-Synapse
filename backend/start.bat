@@ -17,32 +17,24 @@ if not exist "..\venv\Scripts\activate.bat" (
 )
 
 REM Activar entorno virtual
-echo [1/3] Activando entorno virtual...
+echo [1/2] Activando entorno virtual...
 call ..\venv\Scripts\activate.bat
 
 REM Verificar archivo .env
-if not exist "..\.env" (
+if not exist "..\config\.env" (
     echo.
     echo [ADVERTENCIA] Archivo .env no encontrado
     echo Copiando .env.example a .env...
-    copy "..\.env.example" "..\.env" >nul
+    copy "..\config\.env.example" "..\config\.env" >nul
     echo.
     echo [IMPORTANTE] Edita el archivo .env y agrega tu API key de OpenAI
     echo.
     pause
 )
 
-REM Instalar dependencias si es necesario
-echo [2/3] Verificando dependencias...
-pip show pydantic-settings >nul 2>&1
-if errorlevel 1 (
-    echo Instalando pydantic-settings...
-    pip install pydantic-settings
-)
-
 REM Iniciar servidor
-echo [3/3] Iniciando servidor...
+echo [2/2] Iniciando servidor...
 echo.
-python run.py
+python app.py
 
 pause

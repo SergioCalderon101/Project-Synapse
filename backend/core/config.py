@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     @property
     def chats_dir(self) -> Path:
         """Chat storage directory."""
-        return self.base_dir / "chats"
+        return self.base_dir / "data" / "chats"
     
     @property
     def metadata_file(self) -> Path:
@@ -53,17 +53,17 @@ class Settings(BaseSettings):
     @property
     def static_folder(self) -> Path:
         """Static files directory."""
-        return self.base_dir / "static"
+        return self.base_dir.parent / "frontend" / "static"
     
     @property
     def templates_folder(self) -> Path:
         """Templates directory."""
-        return self.base_dir / "templates"
+        return self.base_dir.parent / "frontend" / "templates"
     
     @property
     def logs_folder(self) -> Path:
         """Logs directory."""
-        return self.base_dir / "logs"
+        return self.base_dir / "data" / "logs"
     
     @property
     def log_file(self) -> Path:
@@ -169,7 +169,7 @@ Tu objetivo es ser genuinamente útil adaptándote inteligentemente a las necesi
     
     class Config:
         """Pydantic configuration."""
-        env_file = ".env"
+        env_file = str(Path(__file__).parent.parent.parent / "config" / ".env")
         env_file_encoding = "utf-8"
         case_sensitive = False
         extra = "ignore"
