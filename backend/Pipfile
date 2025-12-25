@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "==3.0.3"
+werkzeug = "==3.0.3"
+flask-cors = "==4.0.1"
+flask-limiter = "==3.5.0"
+flask-talisman = "==1.1.0"
+openai = "==1.51.2"
+python-dotenv = "==1.0.1"
+filelock = "==3.16.1"
+pydantic = "==2.9.2"
+pydantic-settings = "==2.6.0"
+certifi = "==2024.8.30"
+charset-normalizer = "==3.4.0"
+idna = "==3.10"
+requests = "==2.32.3"
+urllib3 = "==2.2.3"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
