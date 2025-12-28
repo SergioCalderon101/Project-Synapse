@@ -18,6 +18,9 @@ flask-talisman==1.1.0
 # Cliente de OpenAI
 openai==1.51.2
 
+# Dependencia httpx fijada por compatibilidad de proxies con openai
+httpx==0.27.2
+
 # Gestión de variables de entorno
 python-dotenv==1.0.1
 
