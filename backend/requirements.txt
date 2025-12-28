@@ -39,9 +39,10 @@ requests==2.32.3
 urllib3==2.2.3
 
 # =============================================================================
-# DEPENDENCIAS DE TESTING (OPCIONAL)
+# DEPENDENCIAS DE DESARROLLO Y TESTING (OPCIONAL)
 # =============================================================================
-# Descomentar para instalar herramientas de testing:
+# Descomentar para instalar herramientas de testing y desarrollo:
 # pytest==7.4.3
 # pytest-flask==1.3.0
 # pytest-cov==4.1.0
+# pylint==3.3.2

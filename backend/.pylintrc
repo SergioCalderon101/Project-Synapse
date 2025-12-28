@@ -1,0 +1,192 @@
+[MASTER]
+# Especifica una lista de archivos o directorios a ignorar
+ignore=__pycache__,
+       .git,
+       .env,
+       venv,
+       env,
+       data
+
+# Usa múltiples procesos para acelerar Pylint
+jobs=1
+
+# Archivos o directorios con patrones a ignorar
+ignore-patterns=test_.*\.py,
+                *_test\.py
+
+# Extensiones de Python a verificar
+extension-pkg-whitelist=pydantic
+
+[MESSAGES CONTROL]
+# Deshabilitar mensajes específicos
+disable=
+    # Importaciones
+    import-error,
+    no-name-in-module,
+    
+    # Docstrings (puedes habilitar si quieres ser más estricto)
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    
+    # Formateo y estilo (puedes ajustar según preferencia)
+    line-too-long,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-instance-attributes,
+    
+    # Nombres
+    invalid-name,
+    
+    # Otros
+    fixme,
+    broad-except,
+    broad-exception-caught,
+    logging-fstring-interpolation,
+    
+    # Flask/Werkzeug específicos
+    no-member
+
+[REPORTS]
+# Formato de salida
+output-format=colorized
+
+# Incluir detalles del mensaje
+msg-template={path}:{line}:{column}: {msg_id}: {msg} ({symbol})
+
+# Reportes
+reports=no
+
+# Evaluar una expresión de Python para puntuación
+score=yes
+
+[BASIC]
+# Convenciones de nombres
+argument-naming-style=snake_case
+attr-naming-style=snake_case
+class-attribute-naming-style=any
+class-naming-style=PascalCase
+const-naming-style=UPPER_CASE
+function-naming-style=snake_case
+method-naming-style=snake_case
+module-naming-style=snake_case
+variable-naming-style=snake_case
+
+# Nombres buenos por defecto
+good-names=i,
+           j,
+           k,
+           ex,
+           Run,
+           _,
+           id,
+           db,
+           pk,
+           app,
+           bp,
+           e
+
+# Expresiones regulares para nombres
+# Permite nombres de variables de una letra y guiones bajos
+variable-rgx=[a-z_][a-z0-9_]{0,30}$
+
+[FORMAT]
+# Número máximo de caracteres por línea
+max-line-length=120
+
+# Número máximo de líneas por módulo
+max-module-lines=1000
+
+# Cadena usada como indentación
+indent-string='    '
+
+# Número de espacios de indentación
+indent-after-paren=4
+
+[DESIGN]
+# Máximo número de argumentos para función/método
+max-args=7
+
+# Máximo número de atributos para una clase
+max-attributes=10
+
+# Máximo número de sentencias return en función/método
+max-returns=6
+
+# Máximo número de ramas para función/método
+max-branches=15
+
+# Máximo número de sentencias en función/método
+max-statements=50
+
+# Mínimo número de métodos públicos para una clase
+min-public-methods=1
+
+# Máximo número de métodos públicos para una clase
+max-public-methods=20
+
+# Máximo número de padres para una clase
+max-parents=7
+
+[SIMILARITIES]
+# Número mínimo de líneas para detectar código duplicado
+min-similarity-lines=4
+
+# Ignora comentarios al detectar similitudes
+ignore-comments=yes
+
+# Ignora docstrings al detectar similitudes
+ignore-docstrings=yes
+
+# Ignora imports al detectar similitudes
+ignore-imports=yes
+
+[TYPECHECK]
+# Lista de módulos para los cuales no se verificarán miembros
+ignored-modules=
+
+# Lista de clases para las cuales no se verificarán miembros
+ignored-classes=optparse.Values,
+                thread._local,
+                _thread._local,
+                SQLObject,
+                Registries,
+                scoped_session
+
+# Lista de miembros que no se reportarán como inexistentes
+generated-members=
+
+# Módulos de contexto para evitar falsos positivos
+contextmanager-decorators=contextlib.contextmanager
+
+[IMPORTS]
+# Permitir wildcard imports
+allow-wildcard-with-all=no
+
+# Analizar imports de fallback
+analyse-fallback-blocks=no
+
+# Deprecated
+deprecated-modules=optparse,
+                   tkinter.tix
+
+[CLASSES]
+# Lista de nombres de métodos válidos
+valid-classmethod-first-arg=cls
+
+# Lista de nombres de metaclases válidas
+valid-metaclass-classmethod-first-arg=mcs
+
+# Lista de decoradores de miembros protegidos
+exclude-protected=_asdict,
+                  _fields,
+                  _replace,
+                  _source,
+                  _make
+
+[EXCEPTIONS]
+# Excepciones que no desencadenarán una advertencia
+overgeneral-exceptions=builtins.Exception
